@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Vocab Learner</title>
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Firebase compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  </head>
+  <body>
+    <!-- Screen: Auth -->
+    <div id="authScreen" class="screen auth-screen">
+      <h1>Vocab Learner</h1>
+      <p>Đăng nhập để bắt đầu học</p>
+      <button id="btn-login" class="primary">Đăng nhập với Google</button>
+    </div>
+
+    <!-- Screen: Topic selector -->
+    <div id="topicScreen" class="screen hidden">
+      <header class="topbar">
+        <h1>Chọn chủ đề</h1>
+        <button id="btn-logout" class="link">Đăng xuất</button>
+      </header>
+
+      <main class="topics">
+        <button class="topic-btn" data-topic="food">🍔 Food & Drink</button>
+        <button class="topic-btn" data-topic="family">👨‍👩‍👧 Family</button>
+        <button class="topic-btn" data-topic="travel">✈️ Travel</button>
+        <button class="topic-btn" data-topic="school">🏫 School</button>
+        <button class="topic-btn" data-topic="work">💼 Work</button>
+        <button class="topic-btn" data-topic="daily">🌞 Daily Life</button>
+      </main>
+      
+    </div>
+
+    <!-- Screen: Study -->
+    <div id="studyScreen" class="screen hidden">
+      <header class="topbar">
+        <div class="left">
+          <button id="btn-back" class="link">⬅ Chủ đề</button>
+          <h1 id="topicTitle">Food & Drink</h1>
+        </div>
+        <div class="right">
+          <button id="btn-quiz" class="primary">Quiz 10 câu</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="status">
+          <div>Chủ đề: <strong id="topicName">Food & Drink</strong></div>
+          <div>Đã học: <strong id="learnedCount">0</strong> / <span id="totalCount">0</span></div>
+          <div>Ôn hôm nay: <strong id="dueCount">0</strong></div>
+          <div>Streak: <strong id="streakDays">0</strong> 🔥</div>
+        </section>
+
+        <section class="card" id="card">
+          <div class="card-front" id="cardFront">
+            <div class="pos" id="pos"></div>
+            <h2 class="word" id="word">word</h2>
+            <div class="ipa" id="ipa">/ipa/</div>
+
+            <div class="actions">
+              <button id="btn-speak" title="Nghe phát âm">🔊 Nghe</button>
+              <button id="btn-show" class="secondary">Hiện nghĩa</button>
+
+              <!-- TTS controls -->
+              <div class="tts-controls">
+                <label class="control-group">
+                  <span>Giọng:</span>
+                  <select id="voiceSelect"></select>
+                </label>
+                <label class="control-group">
+                  <span>Tốc độ:</span>
+                  <input id="rateRange" type="range" min="0.6" max="1.4" step="0.05" value="0.95" />
+                  <output id="rateValue">0.95×</output>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-back hidden" id="cardBack">
+            <h3 id="meaning">Nghĩa</h3>
+            <p class="ex-en" id="exEn">Example sentence (EN).</p>
+            <p class="ex-vi" id="exVi">Câu ví dụ (VI).</p>
+            <div class="srs-buttons">
+              <button data-grade="again" class="danger">Again</button>
+              <button data-grade="hard">Hard</button>
+              <button data-grade="good" class="primary">Good</button>
+              <button data-grade="easy" class="success">Easy</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="nav">
+          <button id="prev">← Trước</button>
+          <button id="next">Sau →</button>
+          <button id="shuffle">Xáo trộn</button>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal Quiz -->
+    <div id="quizModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Quiz 10 câu</h2>
+          <button id="closeQuiz">✕</button>
+        </div>
+        <div id="quizRoot"></div>
+      </div>
+    </div>
+
+    <!-- Data sets -->
+    <script src="words_food.js"></script>
+    <script src="words_family.js"></script>
+    <script src="words_travel.js"></script>
+    <script src="words_school.js"></script>
+<script src="words_work.js"></script>
+<script src="words_daily.js"></script>
+
+    <!-- App logic -->
+    <script src="quiz.js"></script>
+    <script src="firebase.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

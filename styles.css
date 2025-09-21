@@ -1,0 +1,78 @@
+:root{
+  --bg:#fff8fb; --card:#fff; --ink:#222; --sub:#666;
+  --pri:#ff6fa9; --pri-ink:#fff; --ok:#2e7d32; --danger:#c62828;
+  --shadow:0 10px 24px rgba(0,0,0,.08); --radius:16px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);}
+.hidden{display:none!important}
+
+.screen{min-height:100vh; display:flex; flex-direction:column;}
+.auth-screen{align-items:center; justify-content:center; text-align:center; gap:12px}
+.auth-screen h1{margin:0 0 6px 0}
+button{border:1px solid #ddd; background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
+button.primary{background:var(--pri); color:var(--pri-ink); border-color:transparent}
+button.link{background:#fff}
+
+.topbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; background:#fff; box-shadow:var(--shadow);
+}
+.topbar .left{display:flex; align-items:center; gap:10px}
+.topbar h1{margin:0; font-size:20px}
+
+.topics{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; padding:16px}
+.topic-btn{background:#fff; border:1px solid #f1d7e2; box-shadow:var(--shadow); padding:16px; font-size:18px}
+
+.status{
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:8px; padding:16px;
+}
+.status div{background:#fff; border:1px solid #f1d7e2; border-radius:12px; padding:10px 12px}
+
+.card{
+  margin:0 auto; margin-top:8px; max-width:720px; background:var(--card);
+  border-radius:var(--radius); box-shadow:var(--shadow); padding:24px;
+}
+.card-front .word{font-size:40px; margin:4px 0}
+.pos{color:var(--sub); text-transform:uppercase; letter-spacing:.08em; font-size:12px}
+.ipa{color:var(--pri); font-weight:600; margin-bottom:8px}
+.actions button{margin-right:8px}
+.card-back.hidden, .modal.hidden{display:none}
+
+.srs-buttons{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px}
+button.success{background:#e8f5e9; color:var(--ok); border-color:#c8e6c9}
+button.danger{background:#ffebee; color:var(--danger); border-color:#ffcdd2}
+button.secondary{background:#f6f6f6}
+
+.nav{display:flex; gap:8px; justify-content:center; padding:20px}
+
+.modal{
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.modal-content{
+  width:min(720px,96vw); background:#fff; border-radius:16px; box-shadow:var(--shadow);
+  padding:16px 16px 24px;
+}
+.modal-header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:16px}
+#quizRoot{min-height:280px}
+
+.ex-en{margin:.2rem 0 .1rem}
+.ex-vi{margin:0; color:var(--sub)}
+
+.tts-controls{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;
+}
+.control-group{
+  display:grid; grid-template-columns:60px 1fr; gap:8px; align-items:center; font-size:14px;
+}
+#voiceSelect,#rateRange{width:100%}
+#rateValue{margin-left:6px; font-variant-numeric:tabular-nums; color:var(--sub)}
+
+@media (max-width:560px){
+  .card-front .word{font-size:32px}
+  .status{grid-template-columns:1fr}
+}

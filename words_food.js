@@ -1,0 +1,22 @@
+window.DATA_FOOD = [
+  { id:"bread", word:"bread", pos:"n.", ipa:"/bred/", vi:"bánh mì", exEn:"I eat bread for breakfast.", exVi:"Tôi ăn bánh mì vào bữa sáng." },
+  { id:"rice", word:"rice", pos:"n.", ipa:"/raɪs/", vi:"cơm; gạo", exEn:"We cook rice every day.", exVi:"Chúng tôi nấu cơm mỗi ngày." },
+  { id:"noodles", word:"noodles", pos:"n.", ipa:"/ˈnuː.dlz/", vi:"mì", exEn:"She likes spicy noodles.", exVi:"Cô ấy thích mì cay." },
+  { id:"milk", word:"milk", pos:"n.", ipa:"/mɪlk/", vi:"sữa", exEn:"He drinks milk at night.", exVi:"Anh ấy uống sữa vào buổi tối." },
+  { id:"coffee", word:"coffee", pos:"n.", ipa:"/ˈkɒf.i/", vi:"cà phê", exEn:"Coffee helps me wake up.", exVi:"Cà phê giúp tôi tỉnh táo." },
+  { id:"water", word:"water", pos:"n.", ipa:"/ˈwɔː.tər/", vi:"nước", exEn:"Drink more water.", exVi:"Hãy uống nhiều nước hơn." },
+  { id:"tea", word:"tea", pos:"n.", ipa:"/tiː/", vi:"trà", exEn:"I prefer tea to coffee.", exVi:"Tôi thích trà hơn cà phê." },
+  { id:"meat", word:"meat", pos:"n.", ipa:"/miːt/", vi:"thịt", exEn:"We had meat for dinner.", exVi:"Chúng tôi ăn thịt vào bữa tối." },
+  { id:"chicken", word:"chicken", pos:"n.", ipa:"/ˈtʃɪk.ɪn/", vi:"gà", exEn:"She cooks chicken soup.", exVi:"Cô ấy nấu canh gà." },
+  { id:"fish", word:"fish", pos:"n.", ipa:"/fɪʃ/", vi:"cá", exEn:"He caught a fish.", exVi:"Anh ấy bắt được một con cá." },
+  { id:"egg", word:"egg", pos:"n.", ipa:"/eɡ/", vi:"trứng", exEn:"I eat eggs in the morning.", exVi:"Tôi ăn trứng vào buổi sáng." },
+  { id:"apple", word:"apple", pos:"n.", ipa:"/ˈæp.əl/", vi:"táo", exEn:"This apple is sweet.", exVi:"Quả táo này ngọt." },
+  { id:"banana", word:"banana", pos:"n.", ipa:"/bəˈnɑː.nə/", vi:"chuối", exEn:"Monkeys like bananas.", exVi:"Khỉ thích chuối." },
+  { id:"orange", word:"orange", pos:"n.", ipa:"/ˈɒr.ɪndʒ/", vi:"cam", exEn:"I drink orange juice.", exVi:"Tôi uống nước cam." },
+  { id:"soup", word:"soup", pos:"n.", ipa:"/suːp/", vi:"súp", exEn:"Hot soup is tasty.", exVi:"Súp nóng rất ngon." },
+  { id:"salad", word:"salad", pos:"n.", ipa:"/ˈsæl.əd/", vi:"xà lách", exEn:"She makes a salad.", exVi:"Cô ấy làm món xà lách." },
+  { id:"sugar", word:"sugar", pos:"n.", ipa:"/ˈʃʊɡ.ər/", vi:"đường", exEn:"Too much sugar is bad.", exVi:"Quá nhiều đường không tốt." },
+  { id:"salt", word:"salt", pos:"n.", ipa:"/sɒlt/", vi:"muối", exEn:"Add some salt to the soup.", exVi:"Thêm ít muối vào súp." },
+  { id:"oil", word:"oil", pos:"n.", ipa:"/ɔɪl/", vi:"dầu", exEn:"Cook with vegetable oil.", exVi:"Nấu bằng dầu thực vật." },
+  { id:"butter", word:"butter", pos:"n.", ipa:"/ˈbʌt.ər/", vi:"bơ", exEn:"I spread butter on bread.", exVi:"Tôi phết bơ lên bánh mì." }
+];
