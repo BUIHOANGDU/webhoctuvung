@@ -11,7 +11,6 @@ function getDataset(topic) {
   return window.DATA_FOOD || [];
 }
 
-
 let topicData = getDataset(CURRENT_TOPIC);
 const $ = (s)=>document.querySelector(s);
 
@@ -53,56 +52,86 @@ topicNameEl.textContent  = topicLabel(CURRENT_TOPIC);
 // ====== TTS (Text-to-Speech) setup ======
 const VOICE_KEY = "vocab_tts_voice_name";
 const RATE_KEY  = "vocab_tts_rate";
+
 let VOICES = [];
 let EN_VOICE = null;
 let TTS_RATE = parseFloat(localStorage.getItem(RATE_KEY) || "0.95");
+
 const voiceSelect = document.querySelector("#voiceSelect");
 const rateRange   = document.querySelector("#rateRange");
 const rateValue   = document.querySelector("#rateValue");
 
-function pickEnglishVoice(voices){
-  const prefer = [/Google US English/i, /Google UK English/i, /Siri.*(American|British)/i, /Microsoft .* English/i];
-  const english = (voices||[]).filter(v => /^en(-|_)/i.test(v.lang));
-  const savedName = localStorage.getItem(VOICE_KEY);
-  if (savedName) {
-    const saved = english.find(v => v.name === savedName);
-    if (saved) return saved;
-  }
-  for (const re of prefer) {
-    const hit = english.find(v => re.test(v.name));
-    if (hit) return hit;
-  }
-  return english[0] || null;
+// Chỉ giữ 4 loại giọng
+const TARGETS = [
+  { id: "us_male",   label: "English (US) – Male",   langs: [/^en(-|_)US/i], names: [/^Alex$/i, /Google US English/i, /Male/i] },
+  { id: "us_female", label: "English (US) – Female", langs: [/^en(-|_)US/i], names: [/Samantha/i, /Google US English.*Female/i, /Female/i] },
+  { id: "uk_male",   label: "English (UK) – Male",   langs: [/^en(-|_)GB/i], names: [/Daniel/i, /Google UK English.*Male/i, /Male/i] },
+  { id: "uk_female", label: "English (UK) – Female", langs: [/^en(-|_)GB/i], names: [/Kate|Serena|Martha/i, /Google UK English.*Female/i, /Female/i] },
+];
+
+function pickPreferredSet(voices = []) {
+  const out = {};
+  TARGETS.forEach(t => {
+    const candidates = voices.filter(v => t.langs.some(rx => rx.test(v.lang)));
+    let chosen = null;
+    for (const rx of t.names) {
+      chosen = candidates.find(v => rx.test(v.name));
+      if (chosen) break;
+    }
+    out[t.id] = chosen || candidates[0] || null;
+  });
+  return out;
 }
-function populateVoiceDropdown(){
-  if(!voiceSelect) return;
+
+function populateVoiceDropdown() {
+  if (!voiceSelect) return;
   voiceSelect.innerHTML = "";
-  (VOICES||[]).filter(v => /^en(-|_)/i.test(v.lang)).forEach(v=>{
+
+  const preferred = pickPreferredSet(VOICES);
+  const items = TARGETS
+    .map(t => ({ t, voice: preferred[t.id] }))
+    .filter(x => !!x.voice);
+
+  items.forEach(({ t, voice }) => {
     const opt = document.createElement("option");
-    opt.value = v.name; opt.textContent = `${v.name} (${v.lang})`;
+    opt.value = voice.name;
+    opt.textContent = `${t.label} (${voice.name})`;
     voiceSelect.appendChild(opt);
   });
-  if (EN_VOICE) voiceSelect.value = EN_VOICE.name;
+
+  const savedName = localStorage.getItem(VOICE_KEY);
+  const hasSaved  = [...voiceSelect.options].some(o => o.value === savedName);
+  if (hasSaved) {
+    voiceSelect.value = savedName;
+    EN_VOICE = VOICES.find(v => v.name === savedName) || null;
+  } else {
+    voiceSelect.selectedIndex = 0;
+    const first = voiceSelect.options[0];
+    EN_VOICE = first ? VOICES.find(v => v.name === first.value) : null;
+  }
 }
-function refreshVoices(){
+
+function refreshVoices() {
   VOICES = window.speechSynthesis?.getVoices?.() || [];
-  EN_VOICE = pickEnglishVoice(VOICES);
   populateVoiceDropdown();
 }
+
 refreshVoices();
 if (typeof speechSynthesis !== "undefined") {
   speechSynthesis.onvoiceschanged = refreshVoices;
 }
+
+// rate UI
 if (rateRange) {
   rateRange.value = String(TTS_RATE);
   if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
 }
-voiceSelect?.addEventListener("change", ()=>{
+voiceSelect?.addEventListener("change", () => {
   const name = voiceSelect.value;
-  const chosen = (VOICES||[]).find(v=>v.name===name);
-  if(chosen){ EN_VOICE = chosen; localStorage.setItem(VOICE_KEY, chosen.name); }
+  EN_VOICE = (VOICES || []).find(v => v.name === name) || null;
+  if (EN_VOICE) localStorage.setItem(VOICE_KEY, EN_VOICE.name);
 });
-rateRange?.addEventListener("input", ()=>{
+rateRange?.addEventListener("input", () => {
   TTS_RATE = parseFloat(rateRange.value || "1");
   localStorage.setItem(RATE_KEY, String(TTS_RATE));
   if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
@@ -118,7 +147,7 @@ function getStorageKey(){
 function loadProgressFor(key){
   const raw = localStorage.getItem(key);
   if(!raw){
-    const init = Object.fromEntries((topicData||[]).map(w=>[w.id,{ease:2.5, interval:0, next:0, learned:false}]));
+    const init = Object.fromEntries((topicData||[]).map(w=>[w.id,{ease:2.5, interval:0, next:0, learned:false}])); 
     localStorage.setItem(key, JSON.stringify(init));
     return init;
   }
@@ -207,17 +236,6 @@ $("#closeQuiz").addEventListener("click", ()=>document.querySelector("#quizModal
 $("#btn-back").addEventListener("click", ()=>showScreen("topics"));
 
 // ---------- Topic screen events ----------
-function topicLabel(t){
-  switch(t){
-    case "family": return "Family";
-    case "travel": return "Travel";
-    case "school": return "School";
-    case "work":   return "Work";
-    case "daily":  return "Daily Life";
-    default:       return "Food & Drink";
-  }
-}
-
 document.querySelectorAll(".topic-btn").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const t = btn.dataset.topic;
@@ -231,14 +249,12 @@ document.querySelectorAll(".topic-btn").forEach(btn=>{
     topicNameEl.textContent  = topicLabel(t);
     totalCountEl.textContent = topicData.length.toString();
 
-    // reset keys & progress theo topic + user
     PROG = loadProgressFor(getStorageKey());
     countLearned(); countDue(); showCard(idx=0);
 
     showScreen("study");
   });
 });
-
 
 // ---------- Auth UI ----------
 const loginBtn  = $("#btn-login");
@@ -276,17 +292,10 @@ function mergeProgress(localObj, remoteObj){
 if(window.fb){
   fb.auth.onAuthStateChanged(async (user)=>{
     setAuthUI(!!user);
+    if(!user){ showScreen("auth"); return; }
 
-    if(!user){
-      showScreen("auth");
-      return;
-    }
-
-    showScreen("topics"); // login xong → màn chọn chủ đề
-
-    // nạp local theo UID+topic
+    showScreen("topics");
     PROG = loadProgressFor(getStorageKey());
-    // merge cloud (nếu có)
     try{
       const remote = await cloudLoadProgress(user.uid);
       PROG = mergeProgress(PROG, remote);
@@ -298,7 +307,7 @@ if(window.fb){
   });
 }
 
-// ---------- First render (guest nếu chưa login) ----------
+// ---------- First render ----------
 countLearned(); countDue(); peekStreak(); showCard(idx=0);
 
 // Save cloud mỗi lần grade
