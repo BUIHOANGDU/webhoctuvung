@@ -33,8 +33,8 @@
         <button class="topic-btn" data-topic="school">🏫 School</button>
         <button class="topic-btn" data-topic="work">💼 Work</button>
         <button class="topic-btn" data-topic="daily">🌞 Daily Life</button>
+        <button class="topic-btn" data-topic="custom">📌 Thẻ của tôi</button>
       </main>
-      
     </div>
 
     <!-- Screen: Study -->
@@ -45,7 +45,9 @@
           <h1 id="topicTitle">Food & Drink</h1>
         </div>
         <div class="right">
-          <button id="btn-quiz" class="primary">Quiz 10 câu</button>
+          <button id="btn-quiz" class="primary">Quiz(câu hỏi)</button>
+          <button id="btn-addWord" class="secondary">➕ Thêm từ</button>
+          <button id="btn-settings" class="secondary">⚙️</button>
         </div>
       </header>
 
@@ -57,40 +59,30 @@
           <div>Streak: <strong id="streakDays">0</strong> 🔥</div>
         </section>
 
+        <!-- Card với hiệu ứng lật -->
         <section class="card" id="card">
-          <div class="card-front" id="cardFront">
-            <div class="pos" id="pos"></div>
-            <h2 class="word" id="word">word</h2>
-            <div class="ipa" id="ipa">/ipa/</div>
+          <div class="card-inner">
+            <div class="card-front" id="cardFront">
+              <div class="pos" id="pos"></div>
+              <h2 class="word" id="word">word</h2>
+              <div class="ipa" id="ipa">/ipa/</div>
 
-            <div class="actions">
-              <button id="btn-speak" title="Nghe phát âm">🔊 Nghe</button>
-              <button id="btn-show" class="secondary">Hiện nghĩa</button>
-
-              <!-- TTS controls -->
-              <div class="tts-controls">
-                <label class="control-group">
-                  <span>Giọng:</span>
-                  <select id="voiceSelect"></select>
-                </label>
-                <label class="control-group">
-                  <span>Tốc độ:</span>
-                  <input id="rateRange" type="range" min="0.6" max="1.4" step="0.05" value="0.95" />
-                  <output id="rateValue">0.95×</output>
-                </label>
+              <div class="actions">
+                <button id="btn-speak" title="Nghe phát âm">🔊 Nghe</button>
+                <button id="btn-show" class="secondary">Lật thẻ</button>
               </div>
             </div>
-          </div>
 
-          <div class="card-back hidden" id="cardBack">
-            <h3 id="meaning">Nghĩa</h3>
-            <p class="ex-en" id="exEn">Example sentence (EN).</p>
-            <p class="ex-vi" id="exVi">Câu ví dụ (VI).</p>
-            <div class="srs-buttons">
-              <button data-grade="again" class="danger">Again</button>
-              <button data-grade="hard">Hard</button>
-              <button data-grade="good" class="primary">Good</button>
-              <button data-grade="easy" class="success">Easy</button>
+            <div class="card-back" id="cardBack">
+              <h3 id="meaning">Nghĩa</h3>
+              <p class="ex-en" id="exEn">Example sentence (EN).</p>
+              <p class="ex-vi" id="exVi">Câu ví dụ (VI).</p>
+              <div class="srs-buttons">
+                <button data-grade="again" class="danger">Again</button>
+                <button data-grade="hard">Hard</button>
+                <button data-grade="good" class="primary">Good</button>
+                <button data-grade="easy" class="success">Easy</button>
+              </div>
             </div>
           </div>
         </section>
@@ -107,10 +99,78 @@
     <div id="quizModal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Quiz 10 câu</h2>
+          <h2>Quiz(câu hỏi)</h2>
           <button id="closeQuiz">✕</button>
         </div>
         <div id="quizRoot"></div>
+      </div>
+    </div>
+
+    <!-- Modal Settings -->
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>⚙️ Cài đặt giọng đọc</h2>
+          <button id="closeSettings">✕</button>
+        </div>
+        <div class="modal-body">
+          <label>
+            Chọn giọng:
+            <select id="voiceSelect"></select>
+          </label>
+          <br /><br />
+          <label>
+            Tốc độ:
+            <input type="range" id="rateRange" min="0.5" max="1.5" step="0.05" />
+            <span id="rateValue"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Add Word -->
+    <div id="addWordModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>➕ Thêm thẻ mới</h2>
+          <button id="closeAddWord">✕</button>
+        </div>
+
+        <div class="modal-body" style="display:grid;gap:10px;">
+          <label>
+            Tiếng Anh (bắt buộc):<br />
+            <input id="addWordEn" type="text" placeholder="e.g., apple" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          </label>
+
+          <label>
+            Phiên âm /IPA/:<br />
+            <input id="addWordIpa" type="text" placeholder="/ˈæp.əl/" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          </label>
+
+          <label>
+            Từ loại (pos):<br />
+            <input id="addWordPos" type="text" placeholder="noun / verb / adj..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          </label>
+
+          <label>
+            Nghĩa tiếng Việt (bắt buộc):<br />
+            <input id="addWordVi" type="text" placeholder="quả táo" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          </label>
+
+          <label>
+            Ví dụ (EN):<br />
+            <textarea id="addWordExEn" rows="2" placeholder="An apple a day keeps the doctor away." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
+          </label>
+
+          <label>
+            Ví dụ (VI):<br />
+            <textarea id="addWordExVi" rows="2" placeholder="Mỗi ngày một quả táo giúp bạn khỏe mạnh." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
+          </label>
+
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+            <button id="saveAddWord" class="primary">Lưu vào “Thẻ của tôi”</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -119,8 +179,8 @@
     <script src="words_family.js"></script>
     <script src="words_travel.js"></script>
     <script src="words_school.js"></script>
-<script src="words_work.js"></script>
-<script src="words_daily.js"></script>
+    <script src="words_work.js"></script>
+    <script src="words_daily.js"></script>
 
     <!-- App logic -->
     <script src="quiz.js"></script>
