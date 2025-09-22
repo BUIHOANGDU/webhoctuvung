@@ -142,3 +142,111 @@ button.secondary{background:#f6f6f6}
   .card-front .word{font-size:32px}
   .status{grid-template-columns:1fr}
 }
+/* ===== Mobile polish ===== */
+@media (max-width: 640px) {
+  /* Topbar: cho phép xuống dòng, chia 2 hàng gọn gàng */
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .topbar .left {
+    order: 1;
+    flex: 1 1 100%;
+    min-width: 0;               /* để ellipsis hoạt động */
+    align-items: center;
+    gap: 8px;
+  }
+  .topbar h1 {
+    font-size: 18px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;    /* tiêu đề không tràn */
+  }
+  .topbar .right {
+    order: 2;
+    flex: 1 1 100%;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .topbar .right button {
+    flex: 0 0 auto;
+    padding: 10px 12px;         /* cao đều để dễ bấm */
+    border-radius: 10px;
+  }
+  /* ưu tiên đưa nút Quiz lên trước cho dễ chạm */
+  #btn-quiz { order: 1; }
+  #btn-addWord { order: 2; }
+  #btn-delete { order: 3; }
+  #btn-settings { order: 4; }
+
+  /* Thẻ trạng thái 1 cột */
+  .status {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  /* Card: đỡ to, dễ lật */
+  .card {
+    margin: 8px auto;
+    max-width: 94vw;
+  }
+  .card-inner {
+    min-height: 220px;
+    padding: 0;                 /* padding chuyển sang 2 mặt */
+  }
+  .card-front,
+  .card-back {
+    padding: 18px;
+  }
+  .card-front .word { font-size: 32px; }
+  .ipa { margin-bottom: 6px; }
+
+  /* Nút hành động trên thẻ: canh đều, cho phép xuống dòng */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .actions button {
+    flex: 0 1 auto;
+    min-height: 40px;
+  }
+
+  /* Nhóm điều hướng dưới cùng */
+  .nav {
+    padding: 14px 10px 24px;
+    gap: 10px;
+    flex-wrap: wrap;            /* nếu thiếu chỗ thì xuống dòng */
+  }
+  .nav button {
+    min-height: 42px;
+    padding: 8px 14px;
+  }
+
+  /* Modal: nội dung cuộn, tránh tràn */
+  .modal-content {
+    width: 96vw;
+    max-height: 92vh;
+  }
+  #quizRoot {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Nhỏ hơn nữa (iPhone SE, chiều ngang 320–360) */
+@media (max-width: 380px) {
+  .topbar .right {
+    justify-content: space-between;
+  }
+  .topbar .right button {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  .card-front .word { font-size: 28px; }
+}
+
