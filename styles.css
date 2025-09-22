@@ -4,17 +4,28 @@
   --shadow:0 10px 24px rgba(0,0,0,.08); --radius:16px;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
+
+/* ========== Base ========== */
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);}
 .hidden{display:none!important}
 
+button{
+  border:1px solid #ddd; background:#fff; padding:10px 14px;
+  border-radius:12px; cursor:pointer
+}
+button.primary{background:var(--pri); color:var(--pri-ink); border-color:transparent}
+button.link{background:#fff}
+button.success{background:#e8f5e9; color:var(--ok); border-color:#c8e6c9}
+button.danger{background:#ffebee; color:var(--danger); border-color:#ffcdd2}
+button.secondary{background:#f6f6f6}
+
+/* ========== Screens ========== */
 .screen{min-height:100vh; display:flex; flex-direction:column;}
 .auth-screen{align-items:center; justify-content:center; text-align:center; gap:12px}
 .auth-screen h1{margin:0 0 6px 0}
-button{border:1px solid #ddd; background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer}
-button.primary{background:var(--pri); color:var(--pri-ink); border-color:transparent}
-button.link{background:#fff}
 
+/* ========== Topbar ========== */
 .topbar{
   position:sticky; top:0; z-index:10;
   display:flex; align-items:center; justify-content:space-between;
@@ -23,55 +34,110 @@ button.link{background:#fff}
 .topbar .left{display:flex; align-items:center; gap:10px}
 .topbar h1{margin:0; font-size:20px}
 
-.topics{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; padding:16px}
-.topic-btn{background:#fff; border:1px solid #f1d7e2; box-shadow:var(--shadow); padding:16px; font-size:18px}
+/* Nút setting trên topbar */
+.topbar .right button.secondary{
+  margin-left:8px; background:#eee; color:#333;
+  border-radius:6px; padding:6px 10px; font-size:.9rem;
+  border:1px solid #ccc; cursor:pointer; transition:background .2s;
+}
+.topbar .right button.secondary:hover{background:#ddd}
 
+/* ========== Topic grid ========== */
+.topics{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px; padding:16px
+}
+.topic-btn{
+  background:#fff; border:1px solid #f1d7e2; box-shadow:var(--shadow);
+  padding:16px; font-size:18px
+}
+
+/* ========== Status ========== */
 .status{
   display:grid; grid-template-columns:repeat(2,1fr);
   gap:8px; padding:16px;
 }
-.status div{background:#fff; border:1px solid #f1d7e2; border-radius:12px; padding:10px 12px}
-
-.card{
-  margin:0 auto; margin-top:8px; max-width:720px; background:var(--card);
-  border-radius:var(--radius); box-shadow:var(--shadow); padding:24px;
+.status div{
+  background:#fff; border:1px solid #f1d7e2;
+  border-radius:12px; padding:10px 12px
 }
+
+/* ========== Card + Flip ========== */
+.card{
+  position:relative; width:100%; max-width:720px;
+  margin:12px auto; perspective:1200px;
+}
+.card-inner{
+  position:relative; width:100%; min-height:260px;
+  transform-style:preserve-3d; transition:transform .6s ease;
+  border-radius:var(--radius); box-shadow:var(--shadow); background:var(--card);
+}
+.card.flipped .card-inner{ transform: rotateY(180deg); }
+
+.card-front, .card-back{
+  position:absolute; inset:0; padding:24px;
+  backface-visibility:hidden; border-radius:var(--radius);
+  box-shadow:none; background:transparent;
+}
+.card-front{ z-index:2; }
+.card-back{ transform: rotateY(180deg); }
+
 .card-front .word{font-size:40px; margin:4px 0}
 .pos{color:var(--sub); text-transform:uppercase; letter-spacing:.08em; font-size:12px}
 .ipa{color:var(--pri); font-weight:600; margin-bottom:8px}
 .actions button{margin-right:8px}
-.card-back.hidden, .modal.hidden{display:none}
 
+/* ========== SRS buttons & Nav ========== */
 .srs-buttons{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px}
-button.success{background:#e8f5e9; color:var(--ok); border-color:#c8e6c9}
-button.danger{background:#ffebee; color:var(--danger); border-color:#ffcdd2}
-button.secondary{background:#f6f6f6}
-
 .nav{display:flex; gap:8px; justify-content:center; padding:20px}
 
+/* ========== Modal (chung cho Quiz, Cài đặt, Thêm từ) ========== */
 .modal{
   position:fixed; inset:0; background:rgba(0,0,0,.35);
   display:flex; align-items:center; justify-content:center; padding:16px;
+  z-index:1000;
 }
 .modal-content{
-  width:min(720px,96vw); background:#fff; border-radius:16px; box-shadow:var(--shadow);
+  width:min(720px,96vw);
+  max-height:92vh;                 /* giới hạn chiều cao modal */
+  background:#fff; border-radius:16px; box-shadow:var(--shadow);
   padding:16px 16px 24px;
-}
-.modal-header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:16px}
-#quizRoot{min-height:280px}
 
-.ex-en{margin:.2rem 0 .1rem}
-.ex-vi{margin:0; color:var(--sub)}
-
-.tts-controls{
-  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;
+  display:flex; flex-direction:column; /* header cố định, nội dung cuộn */
 }
-.control-group{
-  display:grid; grid-template-columns:60px 1fr; gap:8px; align-items:center; font-size:14px;
+.modal-header{
+  display:flex; justify-content:space-between; align-items:center;
+  border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:12px;
+  flex:0 0 auto;
 }
-#voiceSelect,#rateRange{width:100%}
-#rateValue{margin-left:6px; font-variant-numeric:tabular-nums; color:var(--sub)}
 
+/* Phần nội dung/ thân modal có thể cuộn */
+.modal-body{
+  flex:1 1 auto;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:12px 16px 20px;
+  max-height:calc(92vh - 60px);
+}
+
+/* Khu vực quiz cuộn trong modal */
+#quizRoot{
+  flex:1 1 auto;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  min-height:200px;
+  padding-right:4px;
+}
+
+/* Field trong form modal (thêm từ/cài đặt) */
+.modal-body input[type="text"],
+.modal-body textarea,
+.modal-body select{
+  width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;
+  font:inherit; margin-bottom:10px; background:#fff;
+}
+
+/* ========== Responsive ========== */
 @media (max-width:560px){
   .card-front .word{font-size:32px}
   .status{grid-template-columns:1fr}
