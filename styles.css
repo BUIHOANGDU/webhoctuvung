@@ -142,111 +142,89 @@ button.secondary{background:#f6f6f6}
   .card-front .word{font-size:32px}
   .status{grid-template-columns:1fr}
 }
-/* ===== Mobile polish ===== */
+/* ==== Mobile layout fix (<= 640px) ==== */
 @media (max-width: 640px) {
-  /* Topbar: cho phép xuống dòng, chia 2 hàng gọn gàng */
-  .topbar {
-    flex-wrap: wrap;
+  /* Topbar đổi sang bố cục cột để nút không tràn */
+  .topbar{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 10px;
     padding: 10px 12px;
   }
-  .topbar .left {
-    order: 1;
-    flex: 1 1 100%;
-    min-width: 0;               /* để ellipsis hoạt động */
+
+  /* Hàng 1: back + tiêu đề (không tràn chữ) */
+  .topbar .left{
+    display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;                 /* để ellipsis hoạt động */
   }
-  .topbar h1 {
+  .topbar h1{
     font-size: 18px;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;    /* tiêu đề không tràn */
+    text-overflow: ellipsis;
   }
-  .topbar .right {
-    order: 2;
-    flex: 1 1 100%;
-    display: flex;
+
+  /* Hàng 2: cụm nút – chia lưới, kích thước đều nhau */
+  .topbar .right{
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 cột đều nhau */
+    grid-auto-rows: 44px;           /* chiều cao nút đồng nhất */
     gap: 8px;
-    justify-content: flex-end;
+    width: 100%;
   }
-  .topbar .right button {
-    flex: 0 0 auto;
-    padding: 10px 12px;         /* cao đều để dễ bấm */
+  .topbar .right button{
+    min-width: 0;                   /* tránh tràn ô grid */
+    width: 100%;
+    padding: 0 12px;                /* cao đều nhờ grid-auto-rows */
     border-radius: 10px;
   }
-  /* ưu tiên đưa nút Quiz lên trước cho dễ chạm */
-  #btn-quiz { order: 1; }
-  #btn-addWord { order: 2; }
-  #btn-delete { order: 3; }
-  #btn-settings { order: 4; }
+
+  /* Ưu tiên: Quiz chiếm full hàng đầu, các nút khác chia đều phía dưới */
+  #btn-quiz{ grid-column: 1 / -1; } /* full-width */
+  #btn-addWord{ order: 2; }
+  #btn-delete{ order: 3; }
+  #btn-settings{ order: 4; }
 
   /* Thẻ trạng thái 1 cột */
-  .status {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 12px;
-  }
+  .status{ grid-template-columns: 1fr; gap: 10px; padding: 12px; }
 
-  /* Card: đỡ to, dễ lật */
-  .card {
-    margin: 8px auto;
-    max-width: 94vw;
-  }
-  .card-inner {
-    min-height: 220px;
-    padding: 0;                 /* padding chuyển sang 2 mặt */
-  }
-  .card-front,
-  .card-back {
-    padding: 18px;
-  }
-  .card-front .word { font-size: 32px; }
-  .ipa { margin-bottom: 6px; }
+  /* Card gọn hơn một chút trên mobile */
+  .card{ max-width: 94vw; margin: 8px auto; }
+  .card-inner{ min-height: 220px; }
+  .card-front, .card-back{ padding: 18px; }
+  .card-front .word{ font-size: 30px; }
+  .ipa{ margin-bottom: 6px; }
 
-  /* Nút hành động trên thẻ: canh đều, cho phép xuống dòng */
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .actions button {
-    flex: 0 1 auto;
-    min-height: 40px;
-  }
+  /* Nút trong card: wrap được */
+  .actions{ display: flex; flex-wrap: wrap; gap: 8px; }
+  .actions button{ min-height: 40px; }
 
-  /* Nhóm điều hướng dưới cùng */
-  .nav {
+  /* Điều hướng dưới: cho phép xuống dòng nếu hẹp */
+  .nav{
     padding: 14px 10px 24px;
     gap: 10px;
-    flex-wrap: wrap;            /* nếu thiếu chỗ thì xuống dòng */
+    flex-wrap: wrap;
   }
-  .nav button {
+  .nav button{
     min-height: 42px;
     padding: 8px 14px;
   }
 
-  /* Modal: nội dung cuộn, tránh tràn */
-  .modal-content {
-    width: 96vw;
-    max-height: 92vh;
-  }
-  #quizRoot {
+  /* Modal: tránh tràn màn hình nhỏ */
+  .modal-content{ width: 96vw; max-height: 92vh; }
+  #quizRoot{
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   }
 }
 
-/* Nhỏ hơn nữa (iPhone SE, chiều ngang 320–360) */
-@media (max-width: 380px) {
-  .topbar .right {
-    justify-content: space-between;
-  }
-  .topbar .right button {
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-  .card-front .word { font-size: 28px; }
+/* Nhỏ hơn nữa (<= 380px) – nút gọn thêm */
+@media (max-width: 380px){
+  .topbar .right{ grid-auto-rows: 40px; }
+  .topbar .right button{ padding: 0 10px; font-size: 14px; }
+  .card-front .word{ font-size: 28px; }
 }
-
