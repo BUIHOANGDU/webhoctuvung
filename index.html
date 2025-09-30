@@ -26,7 +26,9 @@
         <button id="btn-logout" class="link">Đăng xuất</button>
       </header>
 
-      <main class="topics">
+      <!-- Nếu bạn đã dùng render động, đổi <main class="topics"> thành <main id="topicList" class="topics"></main> -->
+      <main class="topics" id="topicList">
+        <!-- Các nút mặc định (sẽ bị thay thế nếu bạn render động trong app.js) -->
         <button class="topic-btn" data-topic="food">🍔 Food & Drink</button>
         <button class="topic-btn" data-topic="family">👨‍👩‍👧 Family</button>
         <button class="topic-btn" data-topic="travel">✈️ Travel</button>
@@ -129,7 +131,7 @@
       </div>
     </div>
 
-    <!-- Modal Add Word -->
+    <!-- Modal Add Word (đã có dropdown chọn chủ đề) -->
     <div id="addWordModal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
@@ -138,6 +140,11 @@
         </div>
 
         <div class="modal-body" style="display:grid;gap:10px;">
+          <label>
+            Lưu vào chủ đề:
+            <select id="addWordTopic" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></select>
+          </label>
+
           <label>
             Tiếng Anh (bắt buộc):<br />
             <input id="addWordEn" type="text" placeholder="e.g., apple" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
@@ -169,7 +176,7 @@
           </label>
 
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-            <button id="saveAddWord" class="primary">Lưu vào “Thẻ của tôi”</button>
+            <button id="saveAddWord" class="primary">Lưu</button>
           </div>
         </div>
       </div>
