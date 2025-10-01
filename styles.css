@@ -2,229 +2,173 @@
   --bg:#fff8fb; --card:#fff; --ink:#222; --sub:#666;
   --pri:#ff6fa9; --pri-ink:#fff; --ok:#2e7d32; --danger:#c62828;
   --shadow:0 10px 24px rgba(0,0,0,.08); --radius:16px;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 }
 
 /* ========== Base ========== */
 *{box-sizing:border-box}
+html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);}
 .hidden{display:none!important}
 
 button{
-  border:1px solid #ddd; background:#fff; padding:10px 14px;
-  border-radius:12px; cursor:pointer
+  border:1px solid #ddd;background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer
 }
-button.primary{background:var(--pri); color:var(--pri-ink); border-color:transparent}
+button.primary{background:var(--pri);color:var(--pri-ink);border-color:transparent}
 button.link{background:#fff}
-button.success{background:#e8f5e9; color:var(--ok); border-color:#c8e6c9}
-button.danger{background:#ffebee; color:var(--danger); border-color:#ffcdd2}
+button.success{background:#e8f5e9;color:var(--ok);border-color:#c8e6c9}
+button.danger{background:#ffebee;color:var(--danger);border-color:#ffcdd2}
 button.secondary{background:#f6f6f6}
 
 /* ========== Screens ========== */
-.screen{min-height:100vh; display:flex; flex-direction:column;}
-.auth-screen{align-items:center; justify-content:center; text-align:center; gap:12px}
-.auth-screen h1{margin:0 0 6px 0}
+.screen{min-height:100vh;display:flex;flex-direction:column;}
+.auth-screen{align-items:center;justify-content:center;text-align:center;gap:12px}
+.auth-screen h1{margin:0 0 6px}
 
 /* ========== Topbar ========== */
 .topbar{
-  position:sticky; top:0; z-index:10;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:12px 16px; background:#fff; box-shadow:var(--shadow);
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:#fff;box-shadow:var(--shadow);
 }
-.topbar .left{display:flex; align-items:center; gap:10px}
-.topbar h1{margin:0; font-size:20px}
-
-/* Nút setting trên topbar */
+.topbar .left{display:flex;align-items:center;gap:10px}
+.topbar h1{margin:0;font-size:20px}
+.topbar .right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .topbar .right button.secondary{
-  margin-left:8px; background:#eee; color:#333;
-  border-radius:6px; padding:6px 10px; font-size:.9rem;
-  border:1px solid #ccc; cursor:pointer; transition:background .2s;
+  margin-left:0;background:#eee;color:#333;border-radius:6px;padding:6px 10px;font-size:.9rem;
+  border:1px solid #ccc;cursor:pointer;transition:background .2s
 }
 .topbar .right button.secondary:hover{background:#ddd}
 
 /* ========== Topic grid ========== */
 .topics{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px; padding:16px
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;padding:16px
 }
 .topic-btn{
-  background:#fff; border:1px solid #f1d7e2; box-shadow:var(--shadow);
-  padding:16px; font-size:18px
+  background:#fff;border:1px solid #f1d7e2;box-shadow:var(--shadow);
+  padding:16px;font-size:18px
 }
 
 /* ========== Status ========== */
 .status{
-  display:grid; grid-template-columns:repeat(2,1fr);
-  gap:8px; padding:16px;
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:8px;padding:16px
 }
 .status div{
-  background:#fff; border:1px solid #f1d7e2;
-  border-radius:12px; padding:10px 12px
+  background:#fff;border:1px solid #f1d7e2;border-radius:12px;padding:10px 12px
 }
 
-/* ========== Card + Flip ========== */
+/* ========== Card & Flip (ổn định) ========== */
 .card{
-  position:relative; width:100%; max-width:720px;
-  margin:12px auto; perspective:1200px;
+  position:relative;width:100%;max-width:820px; /* rộng hơn chút cho ảnh */
+  margin:12px auto;perspective:1200px;
 }
 .card-inner{
-  position:relative; width:100%; min-height:260px;
-  transform-style:preserve-3d; transition:transform .6s ease;
-  border-radius:var(--radius); box-shadow:var(--shadow); background:var(--card);
+  position:relative;width:100%;
+  min-height:420px;                     /* 👈 đảm bảo hai mặt bằng nhau */
+  border-radius:var(--radius);box-shadow:var(--shadow);background:var(--card);
+  overflow:hidden;
 }
-.card.flipped .card-inner{ transform: rotateY(180deg); }
 
-.card-front, .card-back{
-  position:absolute; inset:0; padding:24px;
-  backface-visibility:hidden; border-radius:var(--radius);
-  box-shadow:none; background:transparent;
+/* Lật từng mặt – KHÔNG lật container */
+.card-front,.card-back{
+  position:absolute;inset:0;padding:24px;border-radius:var(--radius);background:transparent;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;
+  transform-style:preserve-3d;transition:transform .6s ease;
+  display:flex;flex-direction:column;gap:10px;
 }
-.card-front{ z-index:2; }
-.card-back{ transform: rotateY(180deg); }
+.card-front{transform:rotateY(0deg)}
+.card-back{transform:rotateY(180deg)}
+.card.flipped .card-front{transform:rotateY(180deg)}
+.card.flipped .card-back{transform:rotateY(360deg)} /* = 0deg */
 
-.card-front .word{font-size:40px; margin:4px 0}
-.pos{color:var(--sub); text-transform:uppercase; letter-spacing:.08em; font-size:12px}
-.ipa{color:var(--pri); font-weight:600; margin-bottom:8px}
-.actions button{margin-right:8px}
+.card-front .word{font-size:40px;margin:4px 0}
+.pos{color:var(--sub);text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+.ipa{color:var(--pri);font-weight:600;margin-bottom:4px}
 
-/* ========== SRS buttons & Nav ========== */
-.srs-buttons{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px}
-.nav{display:flex; gap:8px; justify-content:center; padding:20px}
+/* Ảnh minh hoạ: ép theo flashcard */
+#wordImg{
+  width:100%;
+  height:220px;          /* 👈 chiều cao cố định (không tràn) */
+  object-fit:cover;      /* cắt cho vừa khung, không méo */
+  border-radius:12px;margin:8px 0 4px;display:none;
+}
 
-/* ========== Modal (chung cho Quiz, Cài đặt, Thêm từ) ========== */
+/* Hàng nút ở mặt trước */
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions button{margin:0}
+
+/* Mặt sau: nghĩa + ví dụ + nút SRS */
+.card-back h3{margin:0 0 4px}
+.card-back p{margin:2px 0 0}
+.srs-buttons{margin-top:auto;display:flex;flex-wrap:wrap;gap:8px} /* đẩy nút xuống cuối mặt sau */
+
+/* ========== Nav ========== */
+.nav{display:flex;gap:8px;justify-content:center;padding:20px;flex-wrap:wrap}
+
+/* ========== Modal ========== */
 .modal{
-  position:fixed; inset:0; background:rgba(0,0,0,.35);
-  display:flex; align-items:center; justify-content:center; padding:16px;
-  z-index:1000;
+  position:fixed;inset:0;background:rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:center;padding:16px;z-index:1000;
 }
 .modal-content{
-  width:min(720px,96vw);
-  max-height:92vh;                 /* giới hạn chiều cao modal */
-  background:#fff; border-radius:16px; box-shadow:var(--shadow);
-  padding:16px 16px 24px;
-
-  display:flex; flex-direction:column; /* header cố định, nội dung cuộn */
+  width:min(720px,96vw);max-height:92vh;background:#fff;border-radius:16px;box-shadow:var(--shadow);
+  padding:16px 16px 24px;display:flex;flex-direction:column;
 }
 .modal-header{
-  display:flex; justify-content:space-between; align-items:center;
-  border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:12px;
-  flex:0 0 auto;
+  display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;
+  padding-bottom:8px;margin-bottom:12px;flex:0 0 auto;
 }
-
-/* Phần nội dung/ thân modal có thể cuộn */
 .modal-body{
-  flex:1 1 auto;
-  overflow:auto;
-  -webkit-overflow-scrolling:touch;
-  padding:12px 16px 20px;
-  max-height:calc(92vh - 60px);
+  flex:1 1 auto;overflow:auto;-webkit-overflow-scrolling:touch;
+  padding:12px 16px 20px;max-height:calc(92vh - 60px);
 }
-
-/* Khu vực quiz cuộn trong modal */
 #quizRoot{
-  flex:1 1 auto;
-  overflow:auto;
-  -webkit-overflow-scrolling:touch;
-  min-height:200px;
-  padding-right:4px;
+  flex:1 1 auto;overflow:auto;-webkit-overflow-scrolling:touch;min-height:200px;padding-right:4px;
 }
-
-/* Field trong form modal (thêm từ/cài đặt) */
-.modal-body input[type="text"],
-.modal-body textarea,
-.modal-body select{
-  width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;
-  font:inherit; margin-bottom:10px; background:#fff;
+.modal-body input[type="text"],.modal-body input[type="url"],
+.modal-body textarea,.modal-body select{
+  width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font:inherit;margin-bottom:10px;background:#fff;
 }
+.modal-body .img-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.modal-body .img-row img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #eee}
 
 /* ========== Responsive ========== */
 @media (max-width:560px){
   .card-front .word{font-size:32px}
   .status{grid-template-columns:1fr}
+  #wordImg{height:160px}       /* ảnh thấp hơn trên mobile */
+  .card-inner{min-height:360px}
 }
-/* ==== Mobile layout fix (<= 640px) ==== */
-@media (max-width: 640px) {
-  /* Topbar đổi sang bố cục cột để nút không tràn */
-  .topbar{
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 10px 12px;
-  }
-
-  /* Hàng 1: back + tiêu đề (không tràn chữ) */
-  .topbar .left{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;                 /* để ellipsis hoạt động */
-  }
-  .topbar h1{
-    font-size: 18px;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Hàng 2: cụm nút – chia lưới, kích thước đều nhau */
-  .topbar .right{
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 cột đều nhau */
-    grid-auto-rows: 44px;           /* chiều cao nút đồng nhất */
-    gap: 8px;
-    width: 100%;
-  }
-  .topbar .right button{
-    min-width: 0;                   /* tránh tràn ô grid */
-    width: 100%;
-    padding: 0 12px;                /* cao đều nhờ grid-auto-rows */
-    border-radius: 10px;
-  }
-
-  /* Ưu tiên: Quiz chiếm full hàng đầu, các nút khác chia đều phía dưới */
-  #btn-quiz{ grid-column: 1 / -1; } /* full-width */
-  #btn-addWord{ order: 2; }
-  #btn-delete{ order: 3; }
-  #btn-settings{ order: 4; }
-
-  /* Thẻ trạng thái 1 cột */
-  .status{ grid-template-columns: 1fr; gap: 10px; padding: 12px; }
-
-  /* Card gọn hơn một chút trên mobile */
-  .card{ max-width: 94vw; margin: 8px auto; }
-  .card-inner{ min-height: 220px; }
-  .card-front, .card-back{ padding: 18px; }
-  .card-front .word{ font-size: 30px; }
-  .ipa{ margin-bottom: 6px; }
-
-  /* Nút trong card: wrap được */
-  .actions{ display: flex; flex-wrap: wrap; gap: 8px; }
-  .actions button{ min-height: 40px; }
-
-  /* Điều hướng dưới: cho phép xuống dòng nếu hẹp */
-  .nav{
-    padding: 14px 10px 24px;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .nav button{
-    min-height: 42px;
-    padding: 8px 14px;
-  }
-
-  /* Modal: tránh tràn màn hình nhỏ */
-  .modal-content{ width: 96vw; max-height: 92vh; }
-  #quizRoot{
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+/* === Mini flashcard size === */
+.card{
+  max-width:360px;   /* nhỏ gọn như flashcard giấy */
+}
+.card-inner{
+  min-height:200px;
+}
+.card-front, .card-back{
+  padding:12px;
 }
 
-/* Nhỏ hơn nữa (<= 380px) – nút gọn thêm */
-@media (max-width: 380px){
-  .topbar .right{ grid-auto-rows: 40px; }
-  .topbar .right button{ padding: 0 10px; font-size: 14px; }
-  .card-front .word{ font-size: 28px; }
+.card-front .word{
+  font-size:20px;   /* chữ nhỏ vừa mắt */
+}
+.ipa{ font-size:13px; }
+.pos{ font-size:10px; }
+
+#wordImg{
+  height:80px;      /* ảnh nhỏ xíu */
+  margin:4px 0;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+/* mobile vẫn giữ vừa màn hình */
+@media (max-width:560px){
+  .card{ max-width:85vw; }
+  .card-inner{ min-height:180px; }
+  .card-front .word{ font-size:18px; }
+  #wordImg{ height:70px; }
 }
