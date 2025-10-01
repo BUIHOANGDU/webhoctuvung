@@ -23,18 +23,21 @@
     <div id="topicScreen" class="screen hidden">
       <header class="topbar">
         <h1>Chọn chủ đề</h1>
-        <button id="btn-logout" class="link">Đăng xuất</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="btn-manage-topics" class="secondary">➕ Chủ đề</button>
+          <button id="btn-logout" class="link">Đăng xuất</button>
+        </div>
       </header>
 
       <main class="topics" id="topicList">
-        <!-- Các nút chủ đề mặc định (fallback, JS cũng render lại danh sách này) -->
-        <button class="topic-btn" data-topic="food">🍔 Food & Drink</button>
+        <!-- Fallback: JS sẽ render lại đầy đủ; giữ vài nút mặc định cho lần tải đầu -->
+        <button class="topic-btn" data-topic="food">🍔 Food &amp; Drink</button>
         <button class="topic-btn" data-topic="family">👨‍👩‍👧 Family</button>
         <button class="topic-btn" data-topic="travel">✈️ Travel</button>
         <button class="topic-btn" data-topic="school">🏫 School</button>
         <button class="topic-btn" data-topic="work">💼 Work</button>
         <button class="topic-btn" data-topic="daily">🌞 Daily Life</button>
-        <button class="topic-btn" data-topic="custom">📌 Thẻ của tôi</button>
+        <!-- (ĐÃ BỎ) custom -->
       </main>
     </div>
 
@@ -43,20 +46,20 @@
       <header class="topbar">
         <div class="left">
           <button id="btn-back" class="link">⬅ Chủ đề</button>
-          <h1 id="topicTitle">Food & Drink</h1>
+          <h1 id="topicTitle">Food &amp; Drink</h1>
         </div>
         <div class="right">
           <button id="btn-quiz" class="primary">Quiz(câu hỏi)</button>
           <button id="btn-addWord" class="secondary">➕ Thêm từ</button>
           <button id="btn-edit" class="secondary">✎ Sửa thẻ</button>
           <button id="btn-delete" class="danger hidden">🗑️ Xoá thẻ</button>
-          <button id="btn-settings" class="secondary">⚙️</button>
+          <button id="btn-settings" class="secondary" title="Cài đặt TTS">⚙️</button>
         </div>
       </header>
 
       <main>
         <section class="status">
-          <div>Chủ đề: <strong id="topicName">Food & Drink</strong></div>
+          <div>Chủ đề: <strong id="topicName">Food &amp; Drink</strong></div>
           <div>Đã học: <strong id="learnedCount">0</strong> / <span id="totalCount">0</span></div>
           <div>Ôn hôm nay: <strong id="dueCount">0</strong></div>
           <div>Streak: <strong id="streakDays">0</strong> 🔥</div>
@@ -70,7 +73,7 @@
               <h2 class="word" id="word">word</h2>
               <div class="ipa" id="ipa">/ipa/</div>
               <!-- Ảnh minh hoạ -->
-              <img id="wordImg" alt="" style="max-width:100%;height:auto;border-radius:12px;margin:8px 0;display:none;">
+              <img id="wordImg" alt="" style="max-width:100%;height:auto;border-radius:12px;margin:8px 0;display:none;" />
 
               <div class="actions">
                 <button id="btn-speak" title="Nghe phát âm">🔊 Nghe</button>
@@ -111,7 +114,7 @@
       </div>
     </div>
 
-    <!-- Modal Settings -->
+    <!-- Modal Settings (TTS) -->
     <div id="settingsModal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
@@ -143,7 +146,7 @@
 
         <div class="modal-body" style="display:grid;gap:10px;">
           <label>
-            Lưu vào chủ đề:<br>
+            Lưu vào chủ đề:<br />
             <select id="addWordTopic" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></select>
           </label>
 
@@ -171,7 +174,7 @@
             Ảnh minh hoạ (URL):<br />
             <input id="addWordImage" type="url" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
           </label>
-          <img id="addWordPreview" alt="" style="max-width:100%;height:auto;border-radius:10px;display:none;">
+          <img id="addWordPreview" alt="" style="max-width:100%;height:auto;border-radius:10px;display:none;" />
 
           <label>
             Ví dụ (EN):<br />
@@ -192,6 +195,37 @@
               <button id="saveAddWord" class="primary">Lưu</button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Quản lý chủ đề (mới) -->
+    <div id="topicModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Quản lý chủ đề của bạn</h2>
+          <button id="closeTopicModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <!-- Tạo mới -->
+          <div style="display:grid;gap:8px;margin-bottom:16px">
+            <label>Tên chủ đề:
+              <input id="newTopicName" type="text" placeholder="Ví dụ: TOEIC, JLPT N5..." />
+            </label>
+            <label>Biểu tượng (emoji tuỳ chọn):
+              <input id="newTopicIcon" type="text" placeholder="📚" />
+            </label>
+            <button id="createTopic" class="primary">Tạo chủ đề</button>
+          </div>
+
+          <hr />
+
+          <!-- Danh sách chủ đề tự tạo -->
+          <h3>Chủ đề của tôi</h3>
+          <div id="myTopics"></div>
+          <p style="color:#666;margin-top:10px">
+            Lưu ý: Xoá chủ đề sẽ xoá luôn các thẻ và tiến trình ôn trong chủ đề đó.
+          </p>
         </div>
       </div>
     </div>
