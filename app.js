@@ -1,16 +1,19 @@
-// =============== app.js (full) ===============
-// + Thêm từ vào mọi chủ đề
-// + Sửa/Xoá thẻ do người dùng thêm
-// + Ảnh minh hoạ (bao gồm override ảnh cho từ có sẵn)
-// + Giữ nguyên SRS/TTS/Quiz/Cloud Progress
+// =============== app.js (FULL) ===============
+// + Chủ đề tự tạo theo từng tài khoản (per-user)
+// + Thêm/Sửa/Xoá thẻ (giữ nguyên cho builtin & user topics)
+// + Ảnh minh hoạ & override ảnh cho từ builtin theo topic
+// + SRS/Quiz/TTS/Cloud Progress giữ nguyên & cô lập theo user
 
-// ---------- Topic & datasets ----------
+// ---------- Topic & datasets (per-user) ----------
 const TOPIC_KEY = "vocab_current_topic";
-const LOCAL_TOPICS_KEY = "vocab_local_topics_v1";      // để mở rộng sau (topic user tạo)
-const EXTRAS_PREFIX = "vocab_topic_extras__";          // từ user thêm vào topic có sẵn
-const USER_TOPIC_PREFIX = "vocab_topic_words__";        // từ thuộc topic user
-const IMG_OVERRIDE_PREFIX = "vocab_img_override__";     // ảnh override cho từ builtin theo topic
 
+// (BASE names, không dùng trực tiếp)
+const LOCAL_TOPICS_KEY_BASE    = "vocab_local_topics_v1";
+const EXTRAS_PREFIX_BASE       = "vocab_topic_extras__";
+const USER_TOPIC_PREFIX_BASE   = "vocab_topic_words__";
+const IMG_OVERRIDE_PREFIX_BASE = "vocab_img_override__";
+
+// Built-in: BỎ "custom/Thẻ của tôi" vì đã có chủ đề tự tạo
 const BUILTIN_TOPICS = [
   { id: "food",   label: "Food & Drink", icon: "🍔" },
   { id: "family", label: "Family",        icon: "👨‍👩‍👧" },
@@ -18,22 +21,76 @@ const BUILTIN_TOPICS = [
   { id: "school", label: "School",        icon: "🏫" },
   { id: "work",   label: "Work",          icon: "💼" },
   { id: "daily",  label: "Daily Life",    icon: "🌞" },
-  { id: "custom", label: "Thẻ của tôi",   icon: "📌" },
 ];
 
+// === mỗi user có không gian dữ liệu riêng (hoặc __guest) ===
+function uidSuffix(){
+  const uid = window.fb?.auth?.currentUser?.uid;
+  return uid ? `__uid_${uid}` : "__guest";
+}
+function perUserKey(base){ return `${base}${uidSuffix()}`; }
+
+// Các key/prefix theo user
+function LOCAL_TOPICS_KEY(){   return perUserKey(LOCAL_TOPICS_KEY_BASE); }
+function EXTRAS_PREFIX(){      return EXTRAS_PREFIX_BASE       + uidSuffix() + "__"; }
+function USER_TOPIC_PREFIX(){  return USER_TOPIC_PREFIX_BASE   + uidSuffix() + "__"; }
+function IMG_OVERRIDE_PREFIX(){return IMG_OVERRIDE_PREFIX_BASE + uidSuffix() + "__"; }
+
+// Tiện ích chung
 const $ = (s) => document.querySelector(s);
 const isBuiltin = (id) => BUILTIN_TOPICS.some(t => t.id === id);
-const getLocalTopics = () => { try { return JSON.parse(localStorage.getItem(LOCAL_TOPICS_KEY) || "[]"); } catch { return []; } };
+
+// Danh sách chủ đề
+const getLocalTopics = () => { try { return JSON.parse(localStorage.getItem(LOCAL_TOPICS_KEY()) || "[]"); } catch { return []; } };
+function saveLocalTopics(list){ localStorage.setItem(LOCAL_TOPICS_KEY(), JSON.stringify(list||[])); }
 const getAllTopics = () => [...BUILTIN_TOPICS, ...getLocalTopics()];
-const topicLabel = (id) => (getAllTopics().find(x => x.id === id)?.label || id);
+const topicLabel   = (id) => (getAllTopics().find(x => x.id === id)?.label || id);
 
-const loadExtras          = (topicId) => { try { return JSON.parse(localStorage.getItem(EXTRAS_PREFIX + topicId) || "[]"); } catch { return []; } };
-const saveExtras          = (topicId, arr) => localStorage.setItem(EXTRAS_PREFIX + topicId, JSON.stringify(arr || []));
-const loadUserTopicWords  = (topicId) => { try { return JSON.parse(localStorage.getItem(USER_TOPIC_PREFIX + topicId) || "[]"); } catch { return []; } };
-const saveUserTopicWords  = (topicId, arr) => localStorage.setItem(USER_TOPIC_PREFIX + topicId, JSON.stringify(arr || []));
-const loadImgOverrides    = (topicId) => { try { return JSON.parse(localStorage.getItem(IMG_OVERRIDE_PREFIX + topicId) || "{}"); } catch { return {}; } };
-const saveImgOverrides    = (topicId, map) => localStorage.setItem(IMG_OVERRIDE_PREFIX + topicId, JSON.stringify(map || {}));
+// Load/Save theo user
+function loadExtras(topicId){          try{ return JSON.parse(localStorage.getItem(EXTRAS_PREFIX()+topicId) || "[]"); }catch{ return []; } }
+function saveExtras(topicId, arr){     localStorage.setItem(EXTRAS_PREFIX()+topicId, JSON.stringify(arr||[])); }
 
+function loadUserTopicWords(topicId){  try{ return JSON.parse(localStorage.getItem(USER_TOPIC_PREFIX()+topicId) || "[]"); }catch{ return []; } }
+function saveUserTopicWords(topicId, arr){ localStorage.setItem(USER_TOPIC_PREFIX()+topicId, JSON.stringify(arr||[])); }
+
+function loadImgOverrides(topicId){    try{ return JSON.parse(localStorage.getItem(IMG_OVERRIDE_PREFIX()+topicId) || "{}"); }catch{ return {}; } }
+function saveImgOverrides(topicId,map){localStorage.setItem(IMG_OVERRIDE_PREFIX()+topicId, JSON.stringify(map||{})); }
+
+// (Legacy) migrate từ "custom" nếu trước đây bạn từng dùng
+(function migrateLegacyCustomTopic(){
+  // lấy dữ liệu cũ (nếu có) ở key theo user hiện tại
+  const legacyExtras = loadExtras("custom");
+  const legacyUser   = loadUserTopicWords("custom");
+  const hasAny = (legacyExtras && legacyExtras.length) || (legacyUser && legacyUser.length);
+  if (!hasAny) return;
+
+  // tạo 1 chủ đề tự tạo mới
+  const list = getLocalTopics();
+  let baseId = "u_my-cards";
+  let id = baseId, n=1;
+  while (list.some(x=>x.id===id)) id = `${baseId}-${n++}`;
+  list.push({ id, label:"Thẻ của tôi", icon:"📌" });
+  saveLocalTopics(list);
+
+  // gộp dữ liệu: ưu tiên legacyUser, sau đó legacyExtras
+  const merged = [...(legacyUser||[]), ...(legacyExtras||[])];
+  saveUserTopicWords(id, merged);
+
+  // xoá dấu vết cũ
+  localStorage.removeItem(EXTRAS_PREFIX()+"custom");
+  localStorage.removeItem(USER_TOPIC_PREFIX()+"custom");
+  localStorage.removeItem(IMG_OVERRIDE_PREFIX()+"custom");
+  Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith("vocab_progress_custom_v1")) localStorage.removeItem(k);
+  });
+
+  // nếu đang ở topic "custom" thì chuyển sang topic mới
+  if (localStorage.getItem(TOPIC_KEY)==="custom"){
+    localStorage.setItem(TOPIC_KEY, id);
+  }
+})();
+
+// ---------- Dataset theo topic ----------
 function getDataset(topicId){
   if (isBuiltin(topicId)){
     let base = [];
@@ -43,13 +100,13 @@ function getDataset(topicId){
     if (topicId==="school") base = window.DATA_SCHOOL || [];
     if (topicId==="work")   base = window.DATA_WORK   || [];
     if (topicId==="daily")  base = window.DATA_DAILY  || [];
-    if (topicId==="custom") base = [];
     return [...base, ...loadExtras(topicId)];
   }
+  // user topic
   return loadUserTopicWords(topicId);
 }
 
-// ---------- Render topic buttons (nếu màn chọn chủ đề dùng #topicList) ----------
+// ---------- Render topic buttons ----------
 function renderTopicButtons(){
   const wrap = $("#topicList");
   if (!wrap) return;
@@ -58,8 +115,8 @@ function renderTopicButtons(){
     const btn=document.createElement("button");
     btn.className="topic-btn";
     btn.dataset.topic=t.id;
-    btn.textContent=`${t.icon||""} ${t.label}`;
-    btn.onclick=()=>switchTopic(t.id);
+    btn.textContent = `${t.icon||""} ${t.label}`;
+    btn.onclick = ()=>switchTopic(t.id);
     wrap.appendChild(btn);
   });
 }
@@ -131,10 +188,13 @@ function speak(text){
 }
 window.speak = speak;
 
-// ---------- Progress ----------
+// ---------- Progress (per-user) ----------
 const STREAK_KEY="vocab_streak_day_v1";
 function baseKey(){ return `vocab_progress_${CURRENT_TOPIC}_v1`; }
-function getStorageKey(){ const uid=window.fb?.auth?.currentUser?.uid; return uid? `${baseKey()}__uid_${uid}`:`${baseKey()}__guest`; }
+function getStorageKey(){
+  const uid = window.fb?.auth?.currentUser?.uid;
+  return uid ? `${baseKey()}__uid_${uid}` : `${baseKey()}__guest`;
+}
 function loadProgressFor(key){
   const raw=localStorage.getItem(key);
   if(!raw){
@@ -158,13 +218,12 @@ function peekStreak(){ const raw=localStorage.getItem(STREAK_KEY); streakDaysEl&
 function countLearned(){ learnedCountEl&&(learnedCountEl.textContent=Object.values(PROG).filter(x=>x.learned).length); }
 function countDue(){ const now=Date.now(); const ids=Object.entries(PROG).filter(([,v])=>v.next<=now).map(([id])=>id); dueCountEl&&(dueCountEl.textContent=ids.length); return ids; }
 
-// ---------- Card height auto (để lật mượt) ----------
+// ---------- Card height auto ----------
 function adjustCardHeight(){
   const inner = cardEl?.querySelector(".card-inner");
   const front = cardEl?.querySelector(".card-front");
   const back  = cardEl?.querySelector(".card-back");
   if (!inner || !front || !back) return;
-  // đo mặt đang hiển thị (đã rotateY xử lý), lấy max để không giật
   const h = Math.max(front.scrollHeight, back.scrollHeight);
   inner.style.height = h + "px";
 }
@@ -197,7 +256,6 @@ function showCard(i){
   exViEl&&(exViEl.textContent=w.exVi||"");
   showImage(imgForWord(w));
   cardEl?.classList.remove("flipped");
-  // nếu ảnh load chậm, set lại chiều cao sau khi ảnh load
   if (wordImg){
     wordImg.onload = () => adjustCardHeight();
     wordImg.onerror = () => adjustCardHeight();
@@ -250,7 +308,6 @@ btnDelete?.addEventListener("click", ()=>{
 // ---------- Events ----------
 btnShow?.addEventListener("click",()=>{
   cardEl?.classList.toggle("flipped");
-  // chờ khung xoay 1 tick rồi đo lại
   setTimeout(adjustCardHeight, 60);
 });
 $("#btn-speak")?.addEventListener("click",()=>speak(wordEl?.textContent||""));
@@ -262,7 +319,7 @@ document.querySelectorAll(".srs-buttons button").forEach(b=>b.addEventListener("
 $("#next")?.addEventListener("click",nextCard);
 $("#prev")?.addEventListener("click",prevCard);
 $("#shuffle")?.addEventListener("click",shuffle);
-$("#btn-quiz")?.addEventListener("click",()=>openQuiz(topicData));
+$("#btn-quiz")?.addEventListener("click",()=>{ try{ openQuiz?.(topicData); }catch(e){ console.warn("Quiz not wired:", e); } });
 $("#closeQuiz")?.addEventListener("click",()=>$("#quizModal")?.classList.add("hidden"));
 $("#btn-back")?.addEventListener("click",()=>showScreen("topics"));
 
@@ -304,8 +361,15 @@ function mergeProgress(localObj, remoteObj){
 if (window.fb){
   fb.auth.onAuthStateChanged(async (user)=>{
     setAuthUI(!!user);
-    if (!user){ showScreen("auth"); return; }
+    if (!user){
+      renderTopicButtons();   // refresh theo không gian __guest
+      wireTopicButtons();
+      showScreen("auth");
+      return;
+    }
     showScreen("topics");
+    renderTopicButtons();     // refresh theo không gian __uid
+    wireTopicButtons();
 
     PROG = loadProgressFor(getStorageKey());
     try{
@@ -370,10 +434,10 @@ if (typeof speechSynthesis!=="undefined") speechSynthesis.onvoiceschanged = refr
 voiceSelect?.addEventListener("change", ()=>{ localStorage.setItem(VOICE_KEY, voiceSelect.value); EN_VOICE = VOICES.find(v=>v.name===voiceSelect.value)||EN_VOICE; });
 if (rateRange){
   rateRange.value = String(TTS_RATE);
-  rateValue && (rateValue.textContent = `${TTS_RATE.toFixed(2)}×`);
+  if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
   rateRange.addEventListener("input", ()=>{
     TTS_RATE = parseFloat(rateRange.value); localStorage.setItem(RATE_KEY, String(TTS_RATE));
-    rateValue && (rateValue.textContent = `${TTS_RATE.toFixed(2)}×`);
+    if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
   });
 }
 
@@ -401,13 +465,17 @@ function populateTopicSelect(){
   addWordTopicSel.value = CURRENT_TOPIC;
 }
 function fillForm(data={}){
-  $("#addWordEn").value  = data.word||"";
-  $("#addWordIpa").value = data.ipa||"";
-  $("#addWordPos").value = data.pos||"";
-  $("#addWordVi").value  = data.vi||"";
-  $("#addWordExEn").value= data.exEn||"";
-  $("#addWordExVi").value= data.exVi||"";
-  addWordImage && (addWordImage.value = data.img||"");
+  $("#addWordEn")?.setAttribute("value",""); $("#addWordIpa")?.setAttribute("value","");
+  $("#addWordPos")?.setAttribute("value",""); $("#addWordVi")?.setAttribute("value","");
+  $("#addWordExEn")?.setAttribute("value",""); $("#addWordExVi")?.setAttribute("value","");
+
+  const en   = $("#addWordEn");   if (en)   en.value  = data.word||"";
+  const ipa  = $("#addWordIpa");  if (ipa)  ipa.value = data.ipa||"";
+  const pos  = $("#addWordPos");  if (pos)  pos.value = data.pos||"";
+  const vi   = $("#addWordVi");   if (vi)   vi.value  = data.vi||"";
+  const exEn = $("#addWordExEn"); if (exEn) exEn.value= data.exEn||"";
+  const exVi = $("#addWordExVi"); if (exVi) exVi.value= data.exVi||"";
+  if (addWordImage) addWordImage.value = data.img||"";
   previewImage(data.img||"");
 }
 function previewImage(url){
@@ -416,7 +484,7 @@ function previewImage(url){
   else { addWordPreview.removeAttribute("src"); addWordPreview.style.display="none"; }
 }
 addWordImage?.addEventListener("input", ()=> previewImage(addWordImage.value.trim()));
-clearImageBtn?.addEventListener("click", ()=>{ addWordImage.value=""; previewImage(""); });
+clearImageBtn?.addEventListener("click", ()=>{ if(addWordImage) addWordImage.value=""; previewImage(""); });
 function toggleDeleteInModal(show){ deleteWordInModal?.classList.toggle("hidden", !show); }
 
 // mở modal thêm
@@ -431,8 +499,7 @@ btnEdit?.addEventListener("click", ()=>{
   const w=queue[idx]; if(!w) return;
   EDIT_MODE=true;
   populateTopicSelect();
-  addWordTopicSel.value = CURRENT_TOPIC;
-  addWordTopicSel.disabled = true;
+  if (addWordTopicSel){ addWordTopicSel.value = CURRENT_TOPIC; addWordTopicSel.disabled = true; }
 
   const map = loadImgOverrides(CURRENT_TOPIC);
   fillForm({ word:w.word, ipa:w.ipa||"", pos:w.pos||"", vi:w.vi||"", exEn:w.exEn||"", exVi:w.exVi||"", img: w.img || map[w.id] || "" });
@@ -461,12 +528,12 @@ deleteWordInModal?.addEventListener("click", ()=>{
 saveAddWord?.addEventListener("click", ()=>{
   const targetTopic = addWordTopicSel?.value || CURRENT_TOPIC;
   const payload = {
-    word: $("#addWordEn").value.trim(),
-    ipa:  $("#addWordIpa").value.trim(),
-    pos:  $("#addWordPos").value.trim(),
-    vi:   $("#addWordVi").value.trim(),
-    exEn: $("#addWordExEn").value.trim(),
-    exVi: $("#addWordExVi").value.trim(),
+    word: $("#addWordEn")?.value.trim(),
+    ipa:  $("#addWordIpa")?.value.trim(),
+    pos:  $("#addWordPos")?.value.trim(),
+    vi:   $("#addWordVi")?.value.trim(),
+    exEn: $("#addWordExEn")?.value.trim(),
+    exVi: $("#addWordExVi")?.value.trim(),
     img:  addWordImage ? addWordImage.value.trim() : "",
   };
   if (!payload.word || !payload.vi){ alert("Cần nhập tối thiểu: Tiếng Anh + Nghĩa."); return; }
@@ -496,11 +563,10 @@ saveAddWord?.addEventListener("click", ()=>{
       if (i>-1){ arr[i]={...arr[i], ...payload}; saveUserTopicWords(CURRENT_TOPIC,arr); }
     }
   }else{
-    // builtin: chỉ override ảnh (không ghi vào dataset gốc)
+    // builtin: chỉ override ảnh (+ cho phép chỉnh hiển thị cục bộ)
     const map = loadImgOverrides(CURRENT_TOPIC);
     if (payload.img) map[cur.id] = payload.img; else delete map[cur.id];
     saveImgOverrides(CURRENT_TOPIC, map);
-    // có thể cho phép chỉnh text hiển thị cục bộ (không ghi file gốc)
     cur.ipa=payload.ipa; cur.pos=payload.pos; cur.vi=payload.vi; cur.exEn=payload.exEn; cur.exVi=payload.exVi;
   }
   // refresh
@@ -510,3 +576,89 @@ saveAddWord?.addEventListener("click", ()=>{
   addWordModal?.classList.add("hidden");
 });
 
+// ---------- Modal quản lý chủ đề (JS) ----------
+function renderMyTopicsInModal(){
+  const box = document.querySelector("#myTopics");
+  if(!box) return;
+  const mine = getLocalTopics(); // [{id,label,icon}]
+  box.innerHTML = "";
+  if (!mine.length){ box.innerHTML = "<p>Chưa có chủ đề tự tạo.</p>"; return; }
+
+  mine.forEach(t=>{
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const icon = document.createElement("input");
+    icon.type="text"; icon.value=t.icon||""; icon.placeholder="📚"; icon.style.width="64px";
+
+    const name = document.createElement("input");
+    name.type="text"; name.value=t.label; name.placeholder="Tên chủ đề";
+
+    const save = document.createElement("button");
+    save.textContent="Lưu";
+
+    const del = document.createElement("button");
+    del.textContent="Xoá"; del.className="danger";
+
+    save.onclick = ()=>{
+      const list=getLocalTopics();
+      const i=list.findIndex(x=>x.id===t.id);
+      if(i>-1){
+        list[i].label = name.value.trim() || list[i].label;
+        list[i].icon  = icon.value.trim() || "";
+        saveLocalTopics(list);
+        renderTopicButtons();
+        alert("Đã lưu.");
+      }
+    };
+
+    del.onclick = ()=>{
+      if(!confirm(`Xoá chủ đề “${t.label}”?`)) return;
+
+      // xoá dữ liệu của chủ đề này
+      localStorage.removeItem(USER_TOPIC_PREFIX()+t.id);
+      localStorage.removeItem(EXTRAS_PREFIX()+t.id);
+      localStorage.removeItem(IMG_OVERRIDE_PREFIX()+t.id);
+      // xoá mọi progress keys của topic
+      Object.keys(localStorage).forEach(k=>{
+        if(k.startsWith(`vocab_progress_${t.id}_v1`)) localStorage.removeItem(k);
+      });
+
+      saveLocalTopics(getLocalTopics().filter(x=>x.id!==t.id));
+      renderTopicButtons();
+      renderMyTopicsInModal();
+      if (CURRENT_TOPIC===t.id) switchTopic("food");
+      alert("Đã xoá.");
+    };
+
+    row.append(icon,name,save,del);
+    box.appendChild(row);
+  });
+}
+
+// Wire modal/quản lý
+document.querySelector("#btn-manage-topics")?.addEventListener("click", ()=>{
+  document.querySelector("#topicModal")?.classList.remove("hidden");
+  renderMyTopicsInModal();
+});
+document.querySelector("#closeTopicModal")?.addEventListener("click", ()=>{
+  document.querySelector("#topicModal")?.classList.add("hidden");
+});
+document.querySelector("#topicModal")?.addEventListener("click",(e)=>{
+  if(e.target.id==="topicModal") e.currentTarget.classList.add("hidden");
+});
+document.querySelector("#createTopic")?.addEventListener("click", ()=>{
+  const name = document.querySelector("#newTopicName")?.value.trim();
+  const icon = document.querySelector("#newTopicIcon")?.value.trim();
+  if(!name){ alert("Nhập tên chủ đề."); return; }
+  const id = "u_" + (name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"") || Date.now());
+  const list = getLocalTopics();
+  if(list.some(x=>x.id===id)){ alert("Tên này đã tồn tại, hãy đổi tên khác."); return; }
+  list.push({id,label:name,icon});
+  saveLocalTopics(list);
+  const tn=document.querySelector("#newTopicName"); if(tn) tn.value="";
+  const ti=document.querySelector("#newTopicIcon"); if(ti) ti.value="";
+  renderTopicButtons();
+  renderMyTopicsInModal();
+  alert("Đã tạo chủ đề!");
+});
