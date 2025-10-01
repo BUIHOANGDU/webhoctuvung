@@ -26,9 +26,8 @@
         <button id="btn-logout" class="link">Đăng xuất</button>
       </header>
 
-      <!-- Nếu bạn đã dùng render động, đổi <main class="topics"> thành <main id="topicList" class="topics"></main> -->
       <main class="topics" id="topicList">
-        <!-- Các nút mặc định (sẽ bị thay thế nếu bạn render động trong app.js) -->
+        <!-- Các nút chủ đề mặc định (fallback, JS cũng render lại danh sách này) -->
         <button class="topic-btn" data-topic="food">🍔 Food & Drink</button>
         <button class="topic-btn" data-topic="family">👨‍👩‍👧 Family</button>
         <button class="topic-btn" data-topic="travel">✈️ Travel</button>
@@ -49,6 +48,7 @@
         <div class="right">
           <button id="btn-quiz" class="primary">Quiz(câu hỏi)</button>
           <button id="btn-addWord" class="secondary">➕ Thêm từ</button>
+          <button id="btn-edit" class="secondary">✎ Sửa thẻ</button>
           <button id="btn-delete" class="danger hidden">🗑️ Xoá thẻ</button>
           <button id="btn-settings" class="secondary">⚙️</button>
         </div>
@@ -69,6 +69,8 @@
               <div class="pos" id="pos"></div>
               <h2 class="word" id="word">word</h2>
               <div class="ipa" id="ipa">/ipa/</div>
+              <!-- Ảnh minh hoạ -->
+              <img id="wordImg" alt="" style="max-width:100%;height:auto;border-radius:12px;margin:8px 0;display:none;">
 
               <div class="actions">
                 <button id="btn-speak" title="Nghe phát âm">🔊 Nghe</button>
@@ -131,17 +133,17 @@
       </div>
     </div>
 
-    <!-- Modal Add Word (đã có dropdown chọn chủ đề) -->
+    <!-- Modal Add/Edit Word -->
     <div id="addWordModal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>➕ Thêm thẻ mới</h2>
+          <h2>➕ Thêm / ✎ Sửa thẻ</h2>
           <button id="closeAddWord">✕</button>
         </div>
 
         <div class="modal-body" style="display:grid;gap:10px;">
           <label>
-            Lưu vào chủ đề:
+            Lưu vào chủ đề:<br>
             <select id="addWordTopic" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></select>
           </label>
 
@@ -166,6 +168,12 @@
           </label>
 
           <label>
+            Ảnh minh hoạ (URL):<br />
+            <input id="addWordImage" type="url" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          </label>
+          <img id="addWordPreview" alt="" style="max-width:100%;height:auto;border-radius:10px;display:none;">
+
+          <label>
             Ví dụ (EN):<br />
             <textarea id="addWordExEn" rows="2" placeholder="An apple a day keeps the doctor away." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
           </label>
@@ -175,8 +183,14 @@
             <textarea id="addWordExVi" rows="2" placeholder="Mỗi ngày một quả táo giúp bạn khỏe mạnh." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
           </label>
 
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-            <button id="saveAddWord" class="primary">Lưu</button>
+          <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:8px">
+            <div style="display:flex;gap:8px">
+              <button id="clearImage" class="secondary">Xoá ảnh</button>
+              <button id="deleteWordInModal" class="danger hidden">🗑️ Xoá thẻ</button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button id="saveAddWord" class="primary">Lưu</button>
+            </div>
           </div>
         </div>
       </div>
