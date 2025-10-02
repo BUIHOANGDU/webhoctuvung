@@ -23,7 +23,7 @@
     <div id="topicScreen" class="screen hidden">
       <header class="topbar">
         <h1>Chọn chủ đề</h1>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display: flex; gap: 8px; align-items: center">
           <button id="btn-manage-topics" class="secondary">➕ Chủ đề</button>
           <button id="btn-logout" class="link">Đăng xuất</button>
         </div>
@@ -37,7 +37,6 @@
         <button class="topic-btn" data-topic="school">🏫 School</button>
         <button class="topic-btn" data-topic="work">💼 Work</button>
         <button class="topic-btn" data-topic="daily">🌞 Daily Life</button>
-        <!-- (ĐÃ BỎ) custom -->
       </main>
     </div>
 
@@ -53,14 +52,19 @@
           <button id="btn-addWord" class="secondary">➕ Thêm từ</button>
           <button id="btn-edit" class="secondary">✎ Sửa thẻ</button>
           <button id="btn-delete" class="danger hidden">🗑️ Xoá thẻ</button>
-          <button id="btn-settings" class="secondary" title="Cài đặt TTS">⚙️</button>
+          <button id="btn-settings" class="secondary" title="Cài đặt TTS">
+            ⚙️
+          </button>
         </div>
       </header>
 
       <main>
         <section class="status">
           <div>Chủ đề: <strong id="topicName">Food &amp; Drink</strong></div>
-          <div>Đã học: <strong id="learnedCount">0</strong> / <span id="totalCount">0</span></div>
+          <div>
+            Đã học: <strong id="learnedCount">0</strong> /
+            <span id="totalCount">0</span>
+          </div>
           <div>Ôn hôm nay: <strong id="dueCount">0</strong></div>
           <div>Streak: <strong id="streakDays">0</strong> 🔥</div>
         </section>
@@ -72,8 +76,19 @@
               <div class="pos" id="pos"></div>
               <h2 class="word" id="word">word</h2>
               <div class="ipa" id="ipa">/ipa/</div>
-              <!-- Ảnh minh hoạ -->
-              <img id="wordImg" alt="" style="max-width:100%;height:auto;border-radius:12px;margin:8px 0;display:none;" />
+              <!-- Ảnh minh hoạ (thêm referrerpolicy để tránh 403 từ Imgur) -->
+              <img
+                id="wordImg"
+                alt=""
+                referrerpolicy="no-referrer"
+                style="
+                  max-width: 100%;
+                  height: auto;
+                  border-radius: 12px;
+                  margin: 8px 0;
+                  display: none;
+                "
+              />
 
               <div class="actions">
                 <button id="btn-speak" title="Nghe phát âm">🔊 Nghe</button>
@@ -122,14 +137,20 @@
           <button id="closeSettings">✕</button>
         </div>
         <div class="modal-body">
-          <label>
-            Chọn giọng:
-            <select id="voiceSelect"></select>
-          </label>
+          <label
+            >Chọn giọng:
+            <select id="voiceSelect"></select
+          ></label>
           <br /><br />
           <label>
             Tốc độ:
-            <input type="range" id="rateRange" min="0.5" max="1.5" step="0.05" />
+            <input
+              type="range"
+              id="rateRange"
+              min="0.5"
+              max="1.5"
+              step="0.05"
+            />
             <span id="rateValue"></span>
           </label>
         </div>
@@ -144,54 +165,153 @@
           <button id="closeAddWord">✕</button>
         </div>
 
-        <div class="modal-body" style="display:grid;gap:10px;">
-          <label>
-            Lưu vào chủ đề:<br />
-            <select id="addWordTopic" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></select>
+        <div class="modal-body" style="display: grid; gap: 10px">
+          <label
+            >Lưu vào chủ đề:<br />
+            <select
+              id="addWordTopic"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            ></select>
           </label>
 
-          <label>
-            Tiếng Anh (bắt buộc):<br />
-            <input id="addWordEn" type="text" placeholder="e.g., apple" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          <label
+            >Tiếng Anh (bắt buộc):<br />
+            <input
+              id="addWordEn"
+              type="text"
+              placeholder="e.g., apple"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            />
           </label>
 
-          <label>
-            Phiên âm /IPA/:<br />
-            <input id="addWordIpa" type="text" placeholder="/ˈæp.əl/" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          <label
+            >Phiên âm /IPA/:<br />
+            <input
+              id="addWordIpa"
+              type="text"
+              placeholder="/ˈæp.əl/"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            />
           </label>
 
-          <label>
-            Từ loại (pos):<br />
-            <input id="addWordPos" type="text" placeholder="noun / verb / adj..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          <label
+            >Từ loại (pos):<br />
+            <input
+              id="addWordPos"
+              type="text"
+              placeholder="noun / verb / adj..."
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            />
           </label>
 
-          <label>
-            Nghĩa tiếng Việt (bắt buộc):<br />
-            <input id="addWordVi" type="text" placeholder="quả táo" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          <label
+            >Nghĩa tiếng Việt (bắt buộc):<br />
+            <input
+              id="addWordVi"
+              type="text"
+              placeholder="quả táo"
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            />
           </label>
 
-          <label>
-            Ảnh minh hoạ (URL):<br />
-            <input id="addWordImage" type="url" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;" />
+          <label
+            >Ảnh minh hoạ (URL):<br />
+            <input
+              id="addWordImage"
+              type="url"
+              placeholder="https://..."
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            />
           </label>
-          <img id="addWordPreview" alt="" style="max-width:100%;height:auto;border-radius:10px;display:none;" />
+          <!-- Thêm referrerpolicy cho ảnh preview -->
+          <img
+            id="addWordPreview"
+            alt=""
+            referrerpolicy="no-referrer"
+            style="
+              max-width: 100%;
+              height: auto;
+              border-radius: 10px;
+              display: none;
+            "
+          />
 
-          <label>
-            Ví dụ (EN):<br />
-            <textarea id="addWordExEn" rows="2" placeholder="An apple a day keeps the doctor away." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
+          <label
+            >Ví dụ (EN):<br />
+            <textarea
+              id="addWordExEn"
+              rows="2"
+              placeholder="An apple a day keeps the doctor away."
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            ></textarea>
           </label>
 
-          <label>
-            Ví dụ (VI):<br />
-            <textarea id="addWordExVi" rows="2" placeholder="Mỗi ngày một quả táo giúp bạn khỏe mạnh." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;"></textarea>
+          <label
+            >Ví dụ (VI):<br />
+            <textarea
+              id="addWordExVi"
+              rows="2"
+              placeholder="Mỗi ngày một quả táo giúp bạn khỏe mạnh."
+              style="
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              "
+            ></textarea>
           </label>
 
-          <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:8px">
-            <div style="display:flex;gap:8px">
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              justify-content: space-between;
+              flex-wrap: wrap;
+              margin-top: 8px;
+            "
+          >
+            <div style="display: flex; gap: 8px">
               <button id="clearImage" class="secondary">Xoá ảnh</button>
-              <button id="deleteWordInModal" class="danger hidden">🗑️ Xoá thẻ</button>
+              <button id="deleteWordInModal" class="danger hidden">
+                🗑️ Xoá thẻ
+              </button>
             </div>
-            <div style="display:flex;gap:8px">
+            <div style="display: flex; gap: 8px">
               <button id="saveAddWord" class="primary">Lưu</button>
             </div>
           </div>
@@ -207,24 +327,27 @@
           <button id="closeTopicModal">✕</button>
         </div>
         <div class="modal-body">
-          <!-- Tạo mới -->
-          <div style="display:grid;gap:8px;margin-bottom:16px">
-            <label>Tên chủ đề:
-              <input id="newTopicName" type="text" placeholder="Ví dụ: TOEIC, JLPT N5..." />
+          <div style="display: grid; gap: 8px; margin-bottom: 16px">
+            <label
+              >Tên chủ đề:
+              <input
+                id="newTopicName"
+                type="text"
+                placeholder="Ví dụ: TOEIC, JLPT N5..."
+              />
             </label>
-            <label>Biểu tượng (emoji tuỳ chọn):
+            <label
+              >Biểu tượng (emoji tuỳ chọn):
               <input id="newTopicIcon" type="text" placeholder="📚" />
             </label>
             <button id="createTopic" class="primary">Tạo chủ đề</button>
           </div>
-
           <hr />
-
-          <!-- Danh sách chủ đề tự tạo -->
           <h3>Chủ đề của tôi</h3>
           <div id="myTopics"></div>
-          <p style="color:#666;margin-top:10px">
-            Lưu ý: Xoá chủ đề sẽ xoá luôn các thẻ và tiến trình ôn trong chủ đề đó.
+          <p style="color: #666; margin-top: 10px">
+            Lưu ý: Xoá chủ đề sẽ xoá luôn các thẻ và tiến trình ôn trong chủ đề
+            đó.
           </p>
         </div>
       </div>
