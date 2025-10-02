@@ -3,138 +3,69 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
     <title>Admin – Ảnh toàn cục (globalImgOverrides)</title>
     <link rel="stylesheet" href="styles.css" />
     <!-- Firebase compat -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <style>
+      /* Phòng khi CSS ngoài tải chậm: ẩn cứng UI admin */
+      #adminUI { display:none; }
+    </style>
   </head>
   <body>
     <header class="topbar">
       <h1>Admin ảnh từ vựng (GLOBAL)</h1>
       <div class="right">
         <button id="btn-login" class="primary">Đăng nhập</button>
-        <button id="btn-logout" class="link hidden">Đăng xuất</button>
+        <button id="btn-logout" class="link" style="display:none">Đăng xuất</button>
       </div>
     </header>
 
-    <main style="padding: 16px; max-width: 1000px; margin: 0 auto">
-      <section class="status" style="grid-template-columns: 1fr">
+    <!-- Mặc định HIỆN: chỉ thông báo + nút đăng nhập -->
+    <div id="noAccess" class="screen auth-screen" style="padding:16px;text-align:center">
+      <p><b>Bạn chưa đăng nhập hoặc không có quyền admin.</b></p>
+      <p>Vui lòng đăng nhập đúng Gmail đã được cấp phép.</p>
+    </div>
+
+    <!-- Toàn bộ UI quản trị: mặc định ẨN cứng -->
+    <main id="adminUI" style="padding:16px;max-width:1000px;margin:0 auto">
+      <section class="status" style="grid-template-columns:1fr">
         <div>
           <strong>Chọn chủ đề</strong><br />
           <select id="topicSel"></select>
         </div>
       </section>
 
-      <section
-        style="
-          background: #fff;
-          border: 1px solid #f1d7e2;
-          border-radius: 12px;
-          padding: 12px;
-          margin-top: 12px;
-        "
-      >
-        <div style="display: grid; gap: 10px">
-          <div
-            style="
-              display: flex;
-              gap: 8px;
-              align-items: center;
-              flex-wrap: wrap;
-            "
-          >
-            <input
-              id="searchBox"
-              type="text"
-              placeholder="Tìm theo từ tiếng Anh..."
-              style="
-                flex: 1;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-              "
-            />
+      <section style="background:#fff;border:1px solid #f1d7e2;border-radius:12px;padding:12px;margin-top:12px">
+        <div style="display:grid;gap:10px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="searchBox" type="text" placeholder="Tìm theo từ tiếng Anh..." style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px" />
             <button id="btn-refresh" class="secondary">Làm mới</button>
           </div>
 
-          <div
-            style="
-              display: flex;
-              gap: 8px;
-              align-items: center;
-              flex-wrap: wrap;
-            "
-          >
-            <label
-              class="secondary"
-              style="
-                padding: 10px;
-                border-radius: 8px;
-                cursor: pointer;
-                border: 1px solid #ddd;
-                background: #f6f6f6;
-              "
-            >
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label class="secondary" style="padding:10px;border-radius:8px;cursor:pointer;border:1px solid #ddd;background:#f6f6f6">
               Chọn ảnh từ máy
-              <input
-                id="fileInput"
-                type="file"
-                accept="image/*"
-                style="display: none"
-              />
+              <input id="fileInput" type="file" accept="image/*" style="display:none" />
             </label>
-            <input
-              id="urlInput"
-              type="url"
-              placeholder="Hoặc dán URL ảnh (Imgur,...)"
-              style="
-                flex: 1;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-              "
-            />
+            <input id="urlInput" type="url" placeholder="Hoặc dán URL ảnh (Imgur,...)" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px" />
             <button id="btn-attach" class="primary">Lưu ảnh GLOBAL</button>
-            <button
-              id="btn-delete"
-              class="danger"
-              title="Xóa ảnh GLOBAL của từ đang chọn"
-            >
-              Xóa ảnh GLOBAL
-            </button>
+            <button id="btn-delete" class="danger" title="Xóa ảnh GLOBAL của từ đang chọn">Xóa ảnh GLOBAL</button>
           </div>
 
-          <div
-            style="
-              display: flex;
-              gap: 16px;
-              align-items: center;
-              flex-wrap: wrap;
-            "
-          >
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
             <div>🟡 Từ đang chọn: <strong id="chosenWord">chưa</strong></div>
-            <div>
-              🔗 Ảnh GLOBAL hiện tại:
-              <a id="currentUrl" href="#" target="_blank">(chưa có)</a>
-            </div>
-            <img
-              id="preview"
-              alt=""
-              style="
-                max-height: 60px;
-                border-radius: 8px;
-                display: none;
-                border: 1px solid #eee;
-                padding: 2px;
-              "
-            />
+            <div>🔗 Ảnh GLOBAL hiện tại: <a id="currentUrl" href="#" target="_blank">(chưa có)</a></div>
+            <img id="preview" alt="" referrerpolicy="no-referrer"
+                 style="max-height:60px;border-radius:8px;display:none;border:1px solid #eee;padding:2px" />
           </div>
         </div>
       </section>
 
-      <section style="margin-top: 12px">
+      <section style="margin-top:12px">
         <div id="wordsTable"></div>
       </section>
     </main>
@@ -150,15 +81,19 @@
 
     <script>
       // ====== CONFIG ======
-      // ✅ Cấp quyền theo EMAIL
       const ADMIN_EMAILS = [
         "tekido270996@gmail.com",
         "tuyen.ltn.english@gmail.com",
       ];
-      const IMGUR_CLIENT_ID = "7bd825b419d3d23"; // ví dụ: "7bd825b419d3d23"
+      const IMGUR_CLIENT_ID = "7bd825b419d3d23"; // thay bằng Client-ID của bạn
 
       // ====== Shortcuts & datasets ======
       const $ = (s) => document.querySelector(s);
+      const adminUI = $("#adminUI");
+      const noAccess = $("#noAccess");
+      const btnLogin = $("#btn-login");
+      const btnLogout = $("#btn-logout");
+
       const BUILTIN_TOPICS = [
         { id: "food", label: "Food & Drink" },
         { id: "family", label: "Family" },
@@ -177,9 +112,27 @@
         return [];
       }
 
-      // ====== UI refs ======
-      const btnLogin = $("#btn-login");
-      const btnLogout = $("#btn-logout");
+      // ====== Gate helpers ======
+      function isAdmin(user){
+        return !!(user && ADMIN_EMAILS.includes(user.email));
+      }
+      function openAdminUI(){
+        adminUI.style.display = "block";
+        noAccess.style.display = "none";
+        btnLogin.style.display = "none";
+        btnLogout.style.display = "inline-block";
+        // Render sau khi mở cổng
+        populateTopics();
+        renderWords();
+      }
+      function closeAdminUI(){
+        adminUI.style.display = "none";
+        noAccess.style.display = "block";
+        btnLogin.style.display = "inline-block";
+        btnLogout.style.display = "none";
+      }
+
+      // ====== UI refs trong adminUI ======
       const topicSel = $("#topicSel");
       const searchBox = $("#searchBox");
       const btnRefresh = $("#btn-refresh");
@@ -193,95 +146,73 @@
       const previewEl = $("#preview");
 
       let CURRENT_TOPIC = "food";
-      let CURRENT_WORD = null; // object từ dataset
-
-      function setAuthUI(loggedIn) {
-        btnLogin.classList.toggle("hidden", loggedIn);
-        btnLogout.classList.toggle("hidden", !loggedIn);
-      }
-
-      // ====== Admin guard (EMAIL) ======
-      function requireAdmin(user) {
-        if (!user) throw new Error("Chưa đăng nhập.");
-        if (!ADMIN_EMAILS.includes(user.email)) {
-          throw new Error("Bạn không có quyền admin.");
-        }
-      }
+      let CURRENT_WORD = null;
 
       // ====== Populate topics ======
       function populateTopics() {
         topicSel.innerHTML = "";
         BUILTIN_TOPICS.forEach((t) => {
           const opt = document.createElement("option");
-          opt.value = t.id;
-          opt.textContent = t.label;
+          opt.value = t.id; opt.textContent = t.label;
           topicSel.appendChild(opt);
         });
         topicSel.value = CURRENT_TOPIC;
       }
 
-      // ====== Render word list ======
+      // ====== Firestore helpers ======
       async function getGlobalUrl(topicId, wordId) {
         const docId = `${topicId}__${wordId}`;
         const ref = fb.db.collection("globalImgOverrides").doc(docId);
         const doc = await ref.get();
-        return doc.exists ? doc.data()?.url || "" : "";
+        return doc.exists ? (doc.data()?.url || "") : "";
+      }
+      function requireAdmin(user){
+        if (!isAdmin(user)) throw new Error("Bạn không có quyền admin.");
       }
 
-      function renderWords() {
+      // ====== Render word list ======
+      function renderWords(){
         const data = getDataset(CURRENT_TOPIC);
         const q = (searchBox.value || "").trim().toLowerCase();
-        const list = q
-          ? data.filter((w) => (w.word || "").toLowerCase().includes(q))
-          : data;
+        const list = q ? data.filter(w => (w.word||"").toLowerCase().includes(q)) : data;
 
-        const rows = list
-          .map(
-            (w) => `
-      <tr data-id="${w.id}">
-        <td style="white-space:nowrap;padding:8px 10px">${w.word || ""}</td>
-        <td style="padding:8px 10px">${w.vi || ""}</td>
-        <td style="padding:8px 10px;width:240px">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="pick primary" data-id="${w.id}">Chọn</button>
-            <a class="link" target="_blank" href="${w.img || "#"}">${
-              w.img ? "Ảnh gốc" : "(chưa có ảnh gốc)"
-            }</a>
-          </div>
-        </td>
-      </tr>
-    `
-          )
-          .join("");
+        const rows = list.map(w => `
+          <tr data-id="${w.id}">
+            <td style="white-space:nowrap;padding:8px 10px">${w.word||""}</td>
+            <td style="padding:8px 10px">${w.vi||""}</td>
+            <td style="padding:8px 10px;width:240px">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <button class="pick primary" data-id="${w.id}">Chọn</button>
+                <a class="link" target="_blank" href="${w.img || "#"}">${w.img ? "Ảnh gốc" : "(chưa có ảnh gốc)"}</a>
+              </div>
+            </td>
+          </tr>
+        `).join("");
 
         wordsTable.innerHTML = `
-      <div style="overflow:auto;border:1px solid #f1d7e2;border-radius:12px;background:#fff;">
-        <table style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr style="background:#fff4f8">
-              <th style="text-align:left;padding:10px">Từ</th>
-              <th style="text-align:left;padding:10px">Nghĩa</th>
-              <th style="text-align:left;padding:10px">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-      <p style="margin:8px 2px;color:#666">Chọn một từ, rồi Upload/Dán URL để gắn ảnh GLOBAL.</p>
-    `;
+          <div style="overflow:auto;border:1px solid #f1d7e2;border-radius:12px;background:#fff;">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="background:#fff4f8">
+                  <th style="text-align:left;padding:10px">Từ</th>
+                  <th style="text-align:left;padding:10px">Nghĩa</th>
+                  <th style="text-align:left;padding:10px">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <p style="margin:8px 2px;color:#666">Chọn một từ, rồi Upload/Dán URL để gắn ảnh GLOBAL.</p>
+        `;
 
-        wordsTable.querySelectorAll(".pick").forEach((btn) => {
-          btn.addEventListener("click", async () => {
+        wordsTable.querySelectorAll(".pick").forEach(btn=>{
+          btn.addEventListener("click", async ()=>{
             const id = btn.getAttribute("data-id");
             const data2 = getDataset(CURRENT_TOPIC);
-            CURRENT_WORD = data2.find((w) => w.id === id) || null;
-            chosenWordEl.textContent = CURRENT_WORD
-              ? `${CURRENT_WORD.word} (${CURRENT_WORD.id})`
-              : "chưa";
+            CURRENT_WORD = data2.find(w=>w.id===id) || null;
+            chosenWordEl.textContent = CURRENT_WORD ? `${CURRENT_WORD.word} (${CURRENT_WORD.id})` : "chưa";
             previewEl.style.display = "none";
-            const gUrl = CURRENT_WORD
-              ? await getGlobalUrl(CURRENT_TOPIC, CURRENT_WORD.id)
-              : "";
+            const gUrl = CURRENT_WORD ? await getGlobalUrl(CURRENT_TOPIC, CURRENT_WORD.id) : "";
             currentUrlEl.textContent = gUrl ? "mở ảnh" : "(chưa có)";
             currentUrlEl.href = gUrl || "#";
           });
@@ -289,55 +220,44 @@
       }
 
       // ====== Imgur upload ======
-      async function uploadToImgur(file) {
+      async function uploadToImgur(file){
         if (!file) throw new Error("Chưa chọn file ảnh.");
-        if (!IMGUR_CLIENT_ID || IMGUR_CLIENT_ID === "YOUR_IMGUR_CLIENT_ID")
-          throw new Error("Chưa cấu hình IMGUR_CLIENT_ID.");
-        const form = new FormData();
-        form.append("image", file);
+        if (!IMGUR_CLIENT_ID) throw new Error("Chưa cấu hình IMGUR_CLIENT_ID.");
+        const form = new FormData(); form.append("image", file);
         const res = await fetch("https://api.imgur.com/3/image", {
-          method: "POST",
-          headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
-          body: form,
+          method:"POST",
+          headers:{ Authorization:`Client-ID ${IMGUR_CLIENT_ID}` },
+          body: form
         });
         const json = await res.json();
         if (!json?.success) throw new Error("Upload Imgur thất bại.");
-        return json.data.link;
+        return json.data.link; // https://i.imgur.com/xxxx.jpg
       }
 
       // ====== Save / Delete global override ======
-      async function saveGlobalOverride(user, topicId, wordId, url) {
+      async function saveGlobalOverride(user, topicId, wordId, url){
         requireAdmin(user);
         const docId = `${topicId}__${wordId}`;
-        await fb.db.collection("globalImgOverrides").doc(docId).set(
-          {
-            topicId,
-            wordId,
-            url,
-            updatedBy: user.email,
-            // FIX: dùng firebase.firestore.FieldValue (compat)
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
+        await fb.db.collection("globalImgOverrides").doc(docId).set({
+          topicId, wordId, url,
+          updatedBy: user.email,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }, { merge:true });
       }
-      async function deleteGlobalOverride(user, topicId, wordId) {
+      async function deleteGlobalOverride(user, topicId, wordId){
         requireAdmin(user);
         const docId = `${topicId}__${wordId}`;
         await fb.db.collection("globalImgOverrides").doc(docId).delete();
       }
 
       // ====== Events ======
-      btnLogin.addEventListener("click", async () => {
-        try {
-          await fb.auth.signInWithPopup(fb.googleProvider);
-        } catch (e) {
-          alert("Đăng nhập thất bại: " + e.message);
-        }
-      });
-      btnLogout.addEventListener("click", () => fb.auth.signOut());
+      btnLogin.onclick = async ()=> {
+        try { await fb.auth.signInWithPopup(fb.googleProvider); }
+        catch(e){ alert("Đăng nhập thất bại: " + e.message); }
+      };
+      btnLogout.onclick = ()=> fb.auth.signOut();
 
-      topicSel.addEventListener("change", () => {
+      topicSel.addEventListener("change", ()=>{
         CURRENT_TOPIC = topicSel.value;
         CURRENT_WORD = null;
         chosenWordEl.textContent = "chưa";
@@ -345,94 +265,61 @@
         currentUrlEl.href = "#";
         renderWords();
       });
-      searchBox.addEventListener("input", renderWords);
-      btnRefresh.addEventListener("click", renderWords);
+      $("#btn-refresh").addEventListener("click", renderWords);
+      $("#searchBox").addEventListener("input", renderWords);
 
-      fileInput.addEventListener("change", () => {
+      fileInput.addEventListener("change", ()=>{
         const f = fileInput.files?.[0];
-        if (!f) {
-          previewEl.style.display = "none";
-          return;
-        }
-        const url = URL.createObjectURL(f);
-        previewEl.src = url;
+        if (!f){ previewEl.style.display = "none"; return; }
+        previewEl.src = URL.createObjectURL(f);
         previewEl.style.display = "inline-block";
       });
 
-      btnAttach.addEventListener("click", async () => {
+      btnAttach.addEventListener("click", async ()=>{
         const user = fb.auth.currentUser;
-        try {
+        try{
           requireAdmin(user);
           if (!CURRENT_WORD) throw new Error("Hãy chọn một từ trước.");
-          btnAttach.disabled = true;
-          btnAttach.textContent = "Đang xử lý...";
-
-          let finalUrl = (urlInput.value || "").trim();
-          if (!finalUrl) {
+          btnAttach.disabled = true; btnAttach.textContent = "Đang xử lý...";
+          let finalUrl = (urlInput.value||"").trim();
+          if (!finalUrl){
             const file = fileInput.files?.[0];
             if (!file) throw new Error("Chọn file hoặc dán URL ảnh.");
             finalUrl = await uploadToImgur(file);
           }
-
-          await saveGlobalOverride(
-            user,
-            CURRENT_TOPIC,
-            CURRENT_WORD.id,
-            finalUrl
-          );
+          await saveGlobalOverride(user, CURRENT_TOPIC, CURRENT_WORD.id, finalUrl);
           currentUrlEl.textContent = "mở ảnh";
           currentUrlEl.href = finalUrl;
           alert("Đã lưu ảnh GLOBAL.");
-        } catch (e) {
-          console.error(e);
-          alert(e.message || "Lỗi không xác định");
-        } finally {
-          btnAttach.disabled = false;
-          btnAttach.textContent = "Lưu ảnh GLOBAL";
+        }catch(e){
+          console.error(e); alert(e.message||"Lỗi không xác định");
+        }finally{
+          btnAttach.disabled = false; btnAttach.textContent = "Lưu ảnh GLOBAL";
         }
       });
 
-      btnDelete.addEventListener("click", async () => {
+      btnDelete.addEventListener("click", async ()=>{
         const user = fb.auth.currentUser;
-        try {
+        try{
           requireAdmin(user);
           if (!CURRENT_WORD) throw new Error("Hãy chọn một từ trước.");
           if (!confirm("Xóa ảnh GLOBAL của từ này?")) return;
           await deleteGlobalOverride(user, CURRENT_TOPIC, CURRENT_WORD.id);
-          currentUrlEl.textContent = "(chưa có)";
-          currentUrlEl.href = "#";
+          currentUrlEl.textContent = "(chưa có)"; currentUrlEl.href = "#";
           alert("Đã xóa ảnh GLOBAL.");
-        } catch (e) {
-          console.error(e);
-          alert(e.message || "Lỗi không xác định");
+        }catch(e){
+          console.error(e); alert(e.message||"Lỗi không xác định");
         }
       });
 
-      // ====== Auth flow ======
-      if (window.fb) {
-        fb.auth.onAuthStateChanged(async (user) => {
-          const loggedIn = !!user;
-          setAuthUI(loggedIn);
-          if (!loggedIn) {
-            CURRENT_WORD = null;
-            chosenWordEl.textContent = "chưa";
-            return;
-          }
-          try {
-            requireAdmin(user);
-          } catch (e) {
-            alert(e.message);
-            location.href = "index.html";
-            return;
-          }
+      // ====== Auth gate: chỉ mở UI khi là ADMIN ======
+      if (window.fb){
+        fb.auth.onAuthStateChanged((user)=>{
+          if (isAdmin(user)) openAdminUI();
+          else closeAdminUI();
         });
       }
-
-      // ====== Init ======
-      (function init() {
-        populateTopics();
-        renderWords();
-      })();
+      // Không render gì khi chưa qua gate.
     </script>
   </body>
 </html>
