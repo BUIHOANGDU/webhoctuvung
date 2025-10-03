@@ -549,41 +549,55 @@ function refreshVoiceListUI() {
   VOICES = speechSynthesis.getVoices() || [];
   voiceSelect.innerHTML = "";
 
-  // Lấy danh sách các giọng theo nhóm ngôn ngữ
+  // Chỉ giữ các voice mong muốn
+  const desired = VOICES.filter(v => {
+    const lang = v.lang.toLowerCase();
+    if (/^en-us/.test(lang) || /^en-gb/.test(lang)) return true; // English US/UK
+    if (/^ja/.test(lang)) return true; // Japanese
+    if (/^ko/.test(lang)) return true; // Korean
+    return false;
+  });
+
+  // Nhóm voice theo ngôn ngữ
   const grouped = {
-    English: VOICES.filter((v) => /^en(-|_)/i.test(v.lang)),
-    Japanese: VOICES.filter((v) => /^ja(-|_)/i.test(v.lang)),
-    Korean: VOICES.filter((v) => /^ko(-|_)/i.test(v.lang)),
+    "English (US/UK)": desired.filter(v => /^en-/.test(v.lang.toLowerCase())),
+    "Japanese": desired.filter(v => /^ja/.test(v.lang.toLowerCase())),
+    "Korean": desired.filter(v => /^ko/.test(v.lang.toLowerCase())),
   };
 
-  // Render theo từng nhóm (optgroup)
+  // Thêm optgroup cho dropdown
   Object.entries(grouped).forEach(([label, list]) => {
     if (!list.length) return;
     const og = document.createElement("optgroup");
     og.label = label;
-    list.forEach((v) => {
+
+    // Lọc lại: chỉ lấy tối đa 2 voice (Nam/Nữ)
+    let male = list.find(v => /male/i.test(v.name)) || list[0];
+    let female = list.find(v => /female/i.test(v.name)) || list[list.length - 1];
+
+    [male, female].forEach(v => {
+      if (!v) return;
       const opt = document.createElement("option");
       opt.value = v.name;
       opt.textContent = `${v.name} (${v.lang})`;
       og.appendChild(opt);
     });
+
     voiceSelect.appendChild(og);
   });
 
+  // Chọn lại voice đã lưu nếu còn tồn tại
   const saved = localStorage.getItem(VOICE_KEY);
-  const all = VOICES;
-  if (saved && all.some((v) => v.name === saved)) {
+  if (saved && desired.some(v => v.name === saved)) {
     voiceSelect.value = saved;
-    EN_VOICE = all.find((v) => v.name === saved);
-  } else if (grouped.English.length) {
-    voiceSelect.value = grouped.English[0].name;
-    EN_VOICE = grouped.English[0];
-  } else if (grouped.Japanese.length) {
-    voiceSelect.value = grouped.Japanese[0].name;
-    EN_VOICE = grouped.Japanese[0];
-  } else if (grouped.Korean.length) {
-    voiceSelect.value = grouped.Korean[0].name;
-    EN_VOICE = grouped.Korean[0];
+    EN_VOICE = desired.find(v => v.name === saved);
+  } else {
+    // Nếu chưa có, mặc định chọn English US female
+    const fallback = desired.find(v => /^en-us/.test(v.lang.toLowerCase()) && /female/i.test(v.name)) || desired[0];
+    if (fallback) {
+      voiceSelect.value = fallback.name;
+      EN_VOICE = fallback;
+    }
   }
 }
 
@@ -781,4 +795,5 @@ document.querySelector("#createTopic")?.addEventListener("click", () => {
   const ti = document.querySelector("#newTopicIcon"); if (ti) ti.value = "";
   renderTopicButtons(); renderMyTopicsInModal(); alert("Đã tạo chủ đề!");
 });
+
 
