@@ -164,3 +164,29 @@ button.secondary{background:#f6f6f6}
 .card.compact .ipa{font-size:13px}
 .card.compact .pos{font-size:10px}
 .card.compact #wordImg{height:80px;margin:4px 0;border-radius:8px;object-fit:cover}
+/* ===== Back button (Chủ đề) đẹp, không lơ lửng ===== */
+#btn-back{
+  display:inline-flex; align-items:center; gap:6px;
+  background:#eef4ff; color:#0b57d0;
+  border:1px solid #d7e3ff;
+  padding:8px 12px; border-radius:999px;
+  font-weight:600; line-height:1;
+  box-shadow:0 2px 6px rgba(11,87,208,.08);
+  margin:8px 0 6px 12px;
+}
+#btn-back::before{
+  content:"↩"; /* icon đơn giản */
+  font-size:14px;
+}
+
+/* Mobile: cho nút xuống dòng bám sát trái */
+@media (max-width:560px){
+  #btn-back{display:block;margin:8px 0 6px 12px}
+}
+
+/* ===== Fix cắt nút “Nghe / Lật thẻ” ===== */
+.card-front, .card-back{
+  padding:24px 24px 40px;  /* tăng đệm đáy để nút không bị sát mép */
+}
+
+
