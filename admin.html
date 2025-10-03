@@ -78,6 +78,10 @@
     <script src="words_school.js"></script>
     <script src="words_work.js"></script>
     <script src="words_daily.js"></script>
+    <script src="words_dates.js"></script>
+<script src="words_hobbies.js"></script>
+<script src="words_daily_routines.js"></script>
+
 
     <script>
       // ====== CONFIG ======
@@ -101,6 +105,9 @@
         { id: "school", label: "School" },
         { id: "work", label: "Work" },
         { id: "daily", label: "Daily Life" },
+         { id: "dates",    label: "Numbers & Dates" },   // mới
+  { id: "hobbies",  label: "Hobbies" },           // mới
+  { id: "routines", label: "Daily Routines" },    // mới
       ];
       function getDataset(topicId) {
         if (topicId === "food") return window.DATA_FOOD || [];
@@ -323,3 +330,4 @@
     </script>
   </body>
 </html>
+
