@@ -548,22 +548,45 @@ function refreshVoiceListUI() {
   if (!voiceSelect) return;
   VOICES = speechSynthesis.getVoices() || [];
   voiceSelect.innerHTML = "";
-  const englishVoices = VOICES.filter((v) => /^en(-|_)/i.test(v.lang));
-  englishVoices.forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v.name;
-    opt.textContent = `${v.name} (${v.lang})`;
-    voiceSelect.appendChild(opt);
+
+  // Lấy danh sách các giọng theo nhóm ngôn ngữ
+  const grouped = {
+    English: VOICES.filter((v) => /^en(-|_)/i.test(v.lang)),
+    Japanese: VOICES.filter((v) => /^ja(-|_)/i.test(v.lang)),
+    Korean: VOICES.filter((v) => /^ko(-|_)/i.test(v.lang)),
+  };
+
+  // Render theo từng nhóm (optgroup)
+  Object.entries(grouped).forEach(([label, list]) => {
+    if (!list.length) return;
+    const og = document.createElement("optgroup");
+    og.label = label;
+    list.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      og.appendChild(opt);
+    });
+    voiceSelect.appendChild(og);
   });
+
   const saved = localStorage.getItem(VOICE_KEY);
-  if (saved && englishVoices.some((v) => v.name === saved)) {
+  const all = VOICES;
+  if (saved && all.some((v) => v.name === saved)) {
     voiceSelect.value = saved;
-    EN_VOICE = englishVoices.find((v) => v.name === saved);
-  } else if (englishVoices.length) {
-    voiceSelect.value = englishVoices[0].name;
-    EN_VOICE = englishVoices[0];
+    EN_VOICE = all.find((v) => v.name === saved);
+  } else if (grouped.English.length) {
+    voiceSelect.value = grouped.English[0].name;
+    EN_VOICE = grouped.English[0];
+  } else if (grouped.Japanese.length) {
+    voiceSelect.value = grouped.Japanese[0].name;
+    EN_VOICE = grouped.Japanese[0];
+  } else if (grouped.Korean.length) {
+    voiceSelect.value = grouped.Korean[0].name;
+    EN_VOICE = grouped.Korean[0];
   }
 }
+
 refreshVoiceListUI();
 if (typeof speechSynthesis !== "undefined") speechSynthesis.onvoiceschanged = refreshVoiceListUI;
 
@@ -758,3 +781,4 @@ document.querySelector("#createTopic")?.addEventListener("click", () => {
   const ti = document.querySelector("#newTopicIcon"); if (ti) ti.value = "";
   renderTopicButtons(); renderMyTopicsInModal(); alert("Đã tạo chủ đề!");
 });
+
