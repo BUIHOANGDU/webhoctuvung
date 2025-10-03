@@ -549,51 +549,45 @@ function refreshVoiceListUI() {
   VOICES = speechSynthesis.getVoices() || [];
   voiceSelect.innerHTML = "";
 
-  // Chỉ giữ các voice mong muốn
-  const desired = VOICES.filter(v => {
-    const lang = v.lang.toLowerCase();
-    if (/^en-us/.test(lang) || /^en-gb/.test(lang)) return true; // English US/UK
-    if (/^ja/.test(lang)) return true; // Japanese
-    if (/^ko/.test(lang)) return true; // Korean
-    return false;
-  });
-
-  // Nhóm voice theo ngôn ngữ
-  const grouped = {
-    "English (US/UK)": desired.filter(v => /^en-/.test(v.lang.toLowerCase())),
-    "Japanese": desired.filter(v => /^ja/.test(v.lang.toLowerCase())),
-    "Korean": desired.filter(v => /^ko/.test(v.lang.toLowerCase())),
+  // Nhóm ngôn ngữ cần thiết
+  const langs = {
+    "English (US/UK)": v => /^en-(us|gb)/i.test(v.lang),
+    "Japanese": v => /^ja/i.test(v.lang),
+    "Korean": v => /^ko/i.test(v.lang),
   };
 
-  // Thêm optgroup cho dropdown
-  Object.entries(grouped).forEach(([label, list]) => {
+  Object.entries(langs).forEach(([label, filterFn]) => {
+    const list = VOICES.filter(filterFn);
     if (!list.length) return;
+
     const og = document.createElement("optgroup");
     og.label = label;
 
-    // Lọc lại: chỉ lấy tối đa 2 voice (Nam/Nữ)
-    let male = list.find(v => /male/i.test(v.name)) || list[0];
-    let female = list.find(v => /female/i.test(v.name)) || list[list.length - 1];
+    // lấy 2 giọng khác nhau (nếu có) → gán nhãn Nam/Nữ
+    const first = list[0];
+    const second = list[1] || list[0]; // nếu không có đủ thì lặp lại
 
-    [male, female].forEach(v => {
+    [
+      { v: first, suffix: "Male" },
+      { v: second, suffix: "Female" },
+    ].forEach(({ v, suffix }) => {
       if (!v) return;
       const opt = document.createElement("option");
       opt.value = v.name;
-      opt.textContent = `${v.name} (${v.lang})`;
+      opt.textContent = `${v.name} (${v.lang}) [${suffix}]`;
       og.appendChild(opt);
     });
 
     voiceSelect.appendChild(og);
   });
 
-  // Chọn lại voice đã lưu nếu còn tồn tại
+  // chọn lại voice đã lưu hoặc fallback
   const saved = localStorage.getItem(VOICE_KEY);
-  if (saved && desired.some(v => v.name === saved)) {
+  if (saved && VOICES.some(v => v.name === saved)) {
     voiceSelect.value = saved;
-    EN_VOICE = desired.find(v => v.name === saved);
+    EN_VOICE = VOICES.find(v => v.name === saved);
   } else {
-    // Nếu chưa có, mặc định chọn English US female
-    const fallback = desired.find(v => /^en-us/.test(v.lang.toLowerCase()) && /female/i.test(v.name)) || desired[0];
+    const fallback = VOICES.find(v => /^en-us/i.test(v.lang));
     if (fallback) {
       voiceSelect.value = fallback.name;
       EN_VOICE = fallback;
@@ -795,5 +789,6 @@ document.querySelector("#createTopic")?.addEventListener("click", () => {
   const ti = document.querySelector("#newTopicIcon"); if (ti) ti.value = "";
   renderTopicButtons(); renderMyTopicsInModal(); alert("Đã tạo chủ đề!");
 });
+
 
 
