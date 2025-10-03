@@ -15,6 +15,9 @@ const IMG_OVERRIDE_PREFIX_BASE = "vocab_img_override__";
 
 // Built-in: BỎ "custom/Thẻ của tôi" vì đã có chủ đề tự tạo
 const BUILTIN_TOPICS = [
+  { id: "dates",    label: "Numbers & Dates", icon: "📅" },
+{ id: "hobbies",  label: "Hobbies",         icon: "🎯" },
+{ id: "routines", label: "Daily Routines",  icon: "⏰" },
   { id: "food", label: "Food & Drink", icon: "🍔" },
   { id: "family", label: "Family", icon: "👨‍👩‍👧" },
   { id: "travel", label: "Travel", icon: "✈️" },
@@ -148,6 +151,9 @@ function saveImgOverrides(topicId, map) {
 function getDataset(topicId) {
   if (isBuiltin(topicId)) {
     let base = [];
+    if (topicId === "dates")    base = window.DATA_DATES    || [];
+if (topicId === "hobbies")  base = window.DATA_HOBBIES  || [];
+if (topicId === "routines") base = window.DATA_ROUTINES || [];
     if (topicId === "food") base = window.DATA_FOOD || [];
     if (topicId === "family") base = window.DATA_FAMILY || [];
     if (topicId === "travel") base = window.DATA_TRAVEL || [];
@@ -1055,3 +1061,4 @@ document.querySelector("#createTopic")?.addEventListener("click", () => {
   renderMyTopicsInModal();
   alert("Đã tạo chủ đề!");
 });
+
