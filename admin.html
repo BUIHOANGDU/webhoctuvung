@@ -6,20 +6,22 @@
   <meta name="robots" content="noindex,nofollow"/>
   <title>Admin – Ảnh & Chủ đề từ vựng (GLOBAL)</title>
   <link rel="stylesheet" href="styles.css"/>
-  <!-- Firebase compat -->
+
+  <!-- Firebase compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
   <style>
-    /* Ẩn toàn bộ UI cho tới khi qua cổng admin */
+    /* Ẩn UI khi chưa qua cổng admin (tránh lộ form) */
     #adminUI{display:none}
-    .card{max-width:1000px;margin:0 auto}
+    .card{max-width:1100px;margin:0 auto}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .row>*{margin:2px 0}
     .field{flex:1;min-width:180px}
+    .muted{color:#666}
     .tabbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
     .tabbar button{padding:8px 12px}
-    .muted{color:#666}
     .table-wrap{overflow:auto;border:1px solid #f1d7e2;border-radius:12px;background:#fff}
     table{width:100%;border-collapse:collapse}
     th,td{padding:10px;border-bottom:1px solid #f6e7ef;text-align:left}
@@ -38,15 +40,15 @@
 <!-- Màn hình khi chưa có quyền -->
 <div id="noAccess" class="screen auth-screen" style="padding:16px;text-align:center">
   <p><b>Bạn chưa đăng nhập hoặc không có quyền admin.</b></p>
-  <p class="muted">Vui lòng đăng nhập đúng Gmail đã được cấp phép.</p>
+  <p class="muted">Đăng nhập đúng Gmail đã được cấp phép để tiếp tục.</p>
 </div>
 
 <!-- UI chính -->
-<main id="adminUI" style="padding:16px;max-width:1100px;margin:0 auto">
+<main id="adminUI" style="padding:16px;max-width:1150px;margin:0 auto">
   <!-- Tabs -->
   <div class="tabbar">
     <button id="tab-images" class="primary">1) Ảnh GLOBAL</button>
-    <button id="tab-topics" class="secondary">2) Quản lý chủ đề & từ</button>
+    <button id="tab-topics" class="secondary">2) Quản lý chủ đề & từ (cloud)</button>
   </div>
 
   <!-- ========== TAB 1: ẢNH GLOBAL ========== -->
@@ -100,7 +102,9 @@
         <button id="btn-create-topic" class="primary">Tạo/chỉnh sửa</button>
         <button id="btn-delete-topic" class="danger">Xóa chủ đề</button>
       </div>
-      <p class="muted" style="margin:4px 0">Chủ đề cloud nằm trong collection <code>globalTopics</code>. ID nên là dạng chữ thường, gạch nối, ví dụ: <code>g_hobbies</code>. Nếu để trống, hệ thống sẽ tự sinh <code>g_&lt;slug&gt;</code>.</p>
+      <p class="muted" style="margin:4px 0">
+        Chủ đề cloud nằm trong collection <code>globalTopics</code>. ID nên là chữ thường, gạch nối (vd: <code>g_hobbies</code>). Nếu để trống, hệ thống sẽ tự sinh <code>g_&lt;slug&gt;</code>.
+      </p>
       <div style="margin-top:8px">
         <label><b>Đang chọn:</b></label>
         <select id="topicSel_cloud"></select>
@@ -143,7 +147,7 @@
   </section>
 </main>
 
-<!-- datasets sẵn có (để dùng phần TAB 1 với chủ đề built-in) -->
+<!-- datasets sẵn có (Tab 1 dùng để liệt kê từ) -->
 <script src="firebase.js"></script>
 <script src="words_food.js?v=1"></script>
 <script src="words_family.js?v=1"></script>
@@ -156,43 +160,15 @@
 <script src="words_daily_routines.js?v=1"></script>
 
 <script>
-/** ================== CONFIG ================== */
-// EMAIL cho phép
+/* ================== CONFIG ================== */
 const ADMIN_EMAILS = [
   "tekido270996@gmail.com",
   "tuyen.ltn.english@gmail.com",
 ];
-// Client-ID của Imgur
+// Imgur
 const IMGUR_CLIENT_ID = "7bd825b419d3d23";
 
-/** 🔐 Gợi ý Firestore Security Rules (bạn set trong console):
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function isAdmin() {
-      return request.auth != null &&
-        (request.auth.token.email in [
-          "tekido270996@gmail.com",
-          "tuyen.ltn.english@gmail.com"
-        ]);
-    }
-    match /globalTopics/{id} {
-      allow read: if true;
-      allow write, update, delete: if isAdmin();
-    }
-    match /globalWords/{id} {
-      allow read: if true;
-      allow write, update, delete: if isAdmin();
-    }
-    match /globalImgOverrides/{id} {
-      allow read: if true;
-      allow write, update, delete: if isAdmin();
-    }
-  }
-}
-*/
-
-/** ================== SHORTCUTS ================== */
+/* ================== SHORTCUTS ================== */
 const $ = s => document.querySelector(s);
 const adminUI = $("#adminUI");
 const noAccess = $("#noAccess");
@@ -205,7 +181,15 @@ const tabTopics = $("#tab-topics");
 const panelImages = $("#panel-images");
 const panelTopics = $("#panel-topics");
 
-// Built-in topics cho tab ẢNH
+const isAdmin = (user) => !!(user && ADMIN_EMAILS.includes(user.email));
+function openAdminUI(){ adminUI.style.display="block"; noAccess.style.display="none"; btnLogin.style.display="none"; btnLogout.style.display="inline-block"; }
+function closeAdminUI(){ adminUI.style.display="none"; noAccess.style.display="block"; btnLogin.style.display="inline-block"; btnLogout.style.display="none"; }
+
+/* ================== TAB SWITCH ================== */
+tabImages.onclick = ()=>{ tabImages.className="primary"; tabTopics.className="secondary"; panelImages.style.display="block"; panelTopics.style.display="none"; };
+tabTopics.onclick = ()=>{ tabTopics.className="primary"; tabImages.className="secondary"; panelTopics.style.display="block"; panelImages.style.display="none"; };
+
+/* ================== TAB 1: ẢNH GLOBAL ================== */
 const BUILTIN_TOPICS = [
   { id: "food", label: "Food & Drink" },
   { id: "family", label: "Family" },
@@ -229,15 +213,6 @@ function getDataset(topicId){
   if (topicId==="routines") return window.DATA_ROUTINES||[];
   return [];
 }
-const isAdmin = user => !!(user && ADMIN_EMAILS.includes(user.email));
-function openAdminUI(){ adminUI.style.display="block"; noAccess.style.display="none"; btnLogin.style.display="none"; btnLogout.style.display="inline-block"; }
-function closeAdminUI(){ adminUI.style.display="none"; noAccess.style.display="block"; btnLogin.style.display="inline-block"; btnLogout.style.display="none"; }
-
-/** ================== TAB SWITCH ================== */
-tabImages.onclick = ()=>{ tabImages.className="primary"; tabTopics.className="secondary"; panelImages.style.display="block"; panelTopics.style.display="none"; };
-tabTopics.onclick = ()=>{ tabTopics.className="primary"; tabImages.className="secondary"; panelTopics.style.display="block"; panelImages.style.display="none"; };
-
-/** ================== TAB 1: ẢNH GLOBAL ================== */
 const topicSel_img = $("#topicSel_img");
 const searchBox_img = $("#searchBox_img");
 const btnRefresh_img = $("#btn-refresh_img");
@@ -257,7 +232,7 @@ function populateTopics_img(){
   topicSel_img.innerHTML = "";
   BUILTIN_TOPICS.forEach(t=>{
     const opt = document.createElement("option");
-    opt.value=t.id; opt.textContent=t.label;
+    opt.value = t.id; opt.textContent = t.label;
     topicSel_img.appendChild(opt);
   });
   topicSel_img.value = CURRENT_TOPIC_IMG;
@@ -364,7 +339,7 @@ btnDelete.onclick = async ()=>{
   }catch(e){ alert(e.message||"Lỗi không xác định"); }
 };
 
-/** ================== TAB 2: CLOUD TOPICS & WORDS ================== */
+/* ================== TAB 2: CLOUD TOPICS & WORDS ================== */
 const topicLabel = $("#topicLabel");
 const topicIcon  = $("#topicIcon");
 const topicIdInp = $("#topicId");
@@ -389,7 +364,7 @@ const btnClearForm = $("#btn-clear-form");
 const wordsTable_cloud = $("#wordsTable_cloud");
 
 let CURRENT_TOPIC_CLOUD = "";
-let SELECTED_WORD_ID = ""; // để update/delete
+let SELECTED_WORD_ID = "";
 
 function slugify(s){ return (s||"").toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,""); }
 
@@ -403,12 +378,9 @@ async function loadCloudTopics(){
     opt.textContent = `${t.icon||""} ${t.label} (${t.id})`;
     topicSel_cloud.appendChild(opt);
   });
-  if (snap.empty){
-    CURRENT_TOPIC_CLOUD = "";
-  } else {
-    CURRENT_TOPIC_CLOUD = topicSel_cloud.value;
-  }
+  CURRENT_TOPIC_CLOUD = snap.empty ? "" : topicSel_cloud.value;
 }
+
 async function createOrUpdateTopic(user){
   if (!isAdmin(user)) throw new Error("Bạn không có quyền admin.");
   const label = (topicLabel.value||"").trim();
@@ -416,8 +388,7 @@ async function createOrUpdateTopic(user){
   let id = (topicIdInp.value||"").trim();
   if (!id) id = "g_" + slugify(label);
   const icon = (topicIcon.value||"").trim();
-  const ref = fb.db.collection("globalTopics").doc(id);
-  await ref.set({
+  await fb.db.collection("globalTopics").doc(id).set({
     id, label, icon,
     createdBy: user.email,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -428,11 +399,12 @@ async function createOrUpdateTopic(user){
   CURRENT_TOPIC_CLOUD = id;
   await renderWords_cloud();
 }
+
 async function deleteTopic(user){
   if (!isAdmin(user)) throw new Error("Bạn không có quyền admin.");
   if (!CURRENT_TOPIC_CLOUD) throw new Error("Chưa chọn chủ đề cloud.");
   if (!confirm("Xóa chủ đề này và toàn bộ từ thuộc nó?")) return;
-  // Xóa từ trước
+  // Xóa các từ trước
   const qs = await fb.db.collection("globalWords").where("topicId","==",CURRENT_TOPIC_CLOUD).get();
   const batch = fb.db.batch();
   qs.forEach(d=>batch.delete(d.ref));
@@ -443,25 +415,34 @@ async function deleteTopic(user){
   await loadCloudTopics();
   wordsTable_cloud.innerHTML = "";
 }
+
+/* === KHÔNG CẦN INDEX: lấy về rồi sort ở client === */
 async function renderWords_cloud(){
-  if (!CURRENT_TOPIC_CLOUD){ wordsTable_cloud.innerHTML = "<p class='muted'>Chưa có chủ đề cloud.</p>"; return; }
-  const qs = await fb.db.collection("globalWords").where("topicId","==",CURRENT_TOPIC_CLOUD).orderBy("word").get();
-  const rows = qs.docs.map(doc=>{
-    const w = doc.data();
-    return `
-      <tr data-id="${w.wordId}">
-        <td>${w.word||""}</td>
-        <td>${w.vi||""}</td>
-        <td>${w.pos||""}</td>
-        <td style="width:260px">
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <button class="pickCloud primary" data-id="${w.wordId}">Chọn</button>
-            <a class="link" target="_blank" href="${w.img||"#"}">${w.img?"Ảnh":"(no img)"}</a>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
+  if (!CURRENT_TOPIC_CLOUD){
+    wordsTable_cloud.innerHTML = "<p class='muted'>Chưa có chủ đề cloud.</p>";
+    return;
+  }
+  const qs = await fb.db.collection("globalWords")
+    .where("topicId","==",CURRENT_TOPIC_CLOUD)
+    .get();
+
+  const items = qs.docs.map(d => d.data())
+    .sort((a,b)=>(a.word||"").localeCompare(b.word||"", "en", {sensitivity:"base"}));
+
+  const rows = items.map(w => `
+    <tr data-id="${w.wordId}">
+      <td>${w.word||""}</td>
+      <td>${w.vi||""}</td>
+      <td>${w.pos||""}</td>
+      <td style="width:260px">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="pickCloud primary" data-id="${w.wordId}">Chọn</button>
+          <a class="link" target="_blank" href="${w.img||"#"}">${w.img?"Ảnh":"(no img)"}</a>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
   wordsTable_cloud.innerHTML = `
     <div class="table-wrap">
       <table>
@@ -470,35 +451,41 @@ async function renderWords_cloud(){
       </table>
     </div>
   `;
+
   wordsTable_cloud.querySelectorAll(".pickCloud").forEach(btn=>{
-    btn.onclick = ()=>{
-      const wid = btn.getAttribute("data-id");
-      loadWordToForm(wid);
-    };
+    btn.onclick = ()=> loadWordToForm(btn.getAttribute("data-id"));
   });
 }
+
 async function loadWordToForm(wordId){
   const doc = await fb.db.collection("globalWords").doc(`${CURRENT_TOPIC_CLOUD}__${wordId}`).get();
   if (!doc.exists) return;
   const w = doc.data();
   SELECTED_WORD_ID = w.wordId;
   w_word.value = w.word||"";
-  w_vi.value = w.vi||"";
-  w_ipa.value = w.ipa||"";
-  w_pos.value = w.pos||"";
+  w_vi.value   = w.vi||"";
+  w_ipa.value  = w.ipa||"";
+  w_pos.value  = w.pos||"";
   w_exEn.value = w.exEn||"";
   w_exVi.value = w.exVi||"";
-  w_img.value = w.img||"";
-  w_id.value = w.wordId||"";
-  if (w.img){ w_preview.src = w.img; w_preview.style.display="inline-block"; } else { w_preview.style.display="none"; }
+  w_img.value  = w.img||"";
+  w_id.value   = w.wordId||"";
+  if (w.img){ w_preview.src = w.img; w_preview.style.display="inline-block"; }
+  else w_preview.style.display="none";
 }
+
 function clearWordForm(){
-  SELECTED_WORD_ID="";
+  SELECTED_WORD_ID = "";
   [w_word,w_vi,w_ipa,w_pos,w_exEn,w_exVi,w_img,w_id].forEach(i=>i.value="");
-  w_file.value = "";
+  if (w_file) w_file.value = "";
   w_preview.style.display="none";
 }
-w_file.onchange = ()=>{ const f=w_file.files?.[0]; if(!f){w_preview.style.display="none";return;} w_preview.src=URL.createObjectURL(f); w_preview.style.display="inline-block"; };
+w_file.onchange = ()=>{
+  const f = w_file.files?.[0];
+  if (!f){ w_preview.style.display="none"; return; }
+  w_preview.src = URL.createObjectURL(f);
+  w_preview.style.display = "inline-block";
+};
 
 async function saveWord(user){
   if (!isAdmin(user)) throw new Error("Bạn không có quyền admin.");
@@ -506,14 +493,17 @@ async function saveWord(user){
   const word = (w_word.value||"").trim();
   const vi   = (w_vi.value||"").trim();
   if (!word || !vi) throw new Error("Cần nhập Tiếng Anh và Nghĩa.");
-  // upload img nếu chọn file
+
+  // upload ảnh nếu có file
   let img = (w_img.value||"").trim();
   if (!img && w_file.files?.[0]){
     img = await uploadToImgur(w_file.files[0]);
     w_img.value = img;
   }
+
   let wordId = (w_id.value||"").trim();
   if (!wordId) wordId = slugify(word) || String(Date.now());
+
   const docId = `${CURRENT_TOPIC_CLOUD}__${wordId}`;
   await fb.db.collection("globalWords").doc(docId).set({
     topicId: CURRENT_TOPIC_CLOUD,
@@ -527,10 +517,12 @@ async function saveWord(user){
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
   }, {merge:true});
+
   alert("Đã lưu từ.");
   SELECTED_WORD_ID = wordId;
   await renderWords_cloud();
 }
+
 async function deleteWord(user){
   if (!isAdmin(user)) throw new Error("Bạn không có quyền admin.");
   const wordId = (w_id.value||SELECTED_WORD_ID||"").trim();
@@ -542,26 +534,27 @@ async function deleteWord(user){
   await renderWords_cloud();
 }
 
-// events tab 2
-btnCreateTopic.onclick = ()=> createOrUpdateTopic(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
-btnDeleteTopic.onclick = ()=> deleteTopic(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
+/* events tab 2 */
+btnCreateTopic.onclick  = ()=> createOrUpdateTopic(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
+btnDeleteTopic.onclick  = ()=> deleteTopic(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
 btnReloadTopics.onclick = async ()=>{ await loadCloudTopics(); await renderWords_cloud(); };
 topicSel_cloud.onchange = async ()=>{ CURRENT_TOPIC_CLOUD = topicSel_cloud.value; await renderWords_cloud(); };
-btnSaveWord.onclick = ()=> saveWord(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
-btnDeleteWord.onclick = ()=> deleteWord(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
-btnClearForm.onclick = clearWordForm;
+btnSaveWord.onclick     = ()=> saveWord(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
+btnDeleteWord.onclick   = ()=> deleteWord(fb.auth.currentUser).catch(e=>alert(e.message||"Lỗi"));
+btnClearForm.onclick    = clearWordForm;
 
-/** ================== AUTH ================== */
-btnLogin.onclick = async()=>{ try{ await fb.auth.signInWithPopup(fb.googleProvider); }catch(e){ alert("Đăng nhập thất bại: "+e.message); } };
+/* ================== AUTH ================== */
+btnLogin.onclick  = async()=>{ try{ await fb.auth.signInWithPopup(fb.googleProvider); }catch(e){ alert("Đăng nhập thất bại: "+e.message); } };
 btnLogout.onclick = ()=> fb.auth.signOut();
 
 if (window.fb){
   fb.auth.onAuthStateChanged(async (user)=>{
     if (isAdmin(user)){
       openAdminUI();
-      // Tab 1
-      populateTopics_img(); renderWords_img();
-      // Tab 2
+      // Tab 1 (Ảnh)
+      populateTopics_img();
+      renderWords_img();
+      // Tab 2 (Chủ đề & từ)
       await loadCloudTopics();
       await renderWords_cloud();
     }else{
