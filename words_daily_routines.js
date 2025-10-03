@@ -1,0 +1,36 @@
+window.DATA_ROUTINES = [
+  { id:"bus",          word:"Take the bus",              ipa:"/teɪk ðə bʌs/",          pos:"v.", vi:"Bắt xe bus",                 exEn:"I take the bus to work.", exVi:"Tôi đi làm bằng xe buýt.", img:"" },
+  { id:"taxi",         word:"Take the taxi",             ipa:"/teɪk ðə ˈtæk.si/",      pos:"v.", vi:"Bắt taxi",                    exEn:"She took a taxi home.", exVi:"Cô ấy bắt taxi về nhà.", img:"" },
+  { id:"drive",        word:"Drive a car",               ipa:"/draɪv ə kɑːr/",         pos:"v.", vi:"Lái xe ô tô",                 exEn:"He can drive a car.", exVi:"Anh ấy biết lái ô tô.", img:"" },
+  { id:"bike",         word:"Ride a bike / cycle",       ipa:"/raɪd ə baɪk/ /ˈsaɪ.kəl/", pos:"v.", vi:"Đạp xe đạp",               exEn:"We ride bikes in the park.", exVi:"Chúng tôi đạp xe trong công viên.", img:"" },
+  { id:"walk",         word:"Walk",                      ipa:"/wɔːk/",                 pos:"v.", vi:"Đi bộ",                       exEn:"I walk to school.", exVi:"Tôi đi bộ đến trường.", img:"" },
+  { id:"rent-car",     word:"Rent a car",                ipa:"/rent ə kɑːr/",          pos:"v.", vi:"Thuê xe ô tô",                exEn:"They rented a car for the trip.", exVi:"Họ thuê ô tô cho chuyến đi.", img:"" },
+
+  { id:"wake",         word:"Wake up",                   ipa:"/weɪk ʌp/",              pos:"v.", vi:"Thức giấc",                   exEn:"I wake up at 6 a.m.", exVi:"Tôi thức giấc lúc 6 giờ sáng.", img:"" },
+  { id:"get-up",       word:"Get up",                    ipa:"/ɡet ʌp/",               pos:"v.", vi:"Thức dậy",                    exEn:"I get up right after the alarm.", exVi:"Tôi dậy ngay sau chuông báo.", img:"" },
+  { id:"make-bed",     word:"Make the bed",              ipa:"/meɪk ðə bed/",          pos:"v.", vi:"Dọn giường",                  exEn:"She makes the bed every morning.", exVi:"Cô ấy dọn giường mỗi sáng.", img:"" },
+  { id:"toilet",       word:"Go to the toilet",          ipa:"/ɡoʊ tə ðə ˈtɔɪ.lət/",   pos:"v.", vi:"Đi vệ sinh",                  exEn:"He went to the toilet.", exVi:"Anh ấy đi vệ sinh.", img:"" },
+  { id:"wash-face",    word:"Wash my face",              ipa:"/wɒʃ maɪ feɪs/",         pos:"v.", vi:"Rửa mặt",                     exEn:"I wash my face with cold water.", exVi:"Tôi rửa mặt bằng nước lạnh.", img:"" },
+  { id:"brush-teeth",  word:"Brush my teeth",            ipa:"/brʌʃ maɪ tiːθ/",        pos:"v.", vi:"Đánh răng",                   exEn:"Brush your teeth twice a day.", exVi:"Đánh răng hai lần mỗi ngày.", img:"" },
+
+  { id:"breakfast",    word:"Have breakfast",            ipa:"/hæv ˈbrek.fəst/",       pos:"v.", vi:"Ăn sáng",                      exEn:"We have breakfast at 7 a.m.", exVi:"Chúng tôi ăn sáng lúc 7 giờ.", img:"" },
+  { id:"work",         word:"Go to work",                ipa:"/ɡoʊ tə wɜːrk/",         pos:"v.", vi:"Đi làm",                       exEn:"My mom goes to work by train.", exVi:"Mẹ tôi đi làm bằng tàu.", img:"" },
+  { id:"school",       word:"Go to school",              ipa:"/ɡoʊ tə skuːl/",         pos:"v.", vi:"Đi học",                       exEn:"Children go to school at eight.", exVi:"Trẻ em đi học lúc 8 giờ.", img:"" },
+  { id:"lunch",        word:"Have lunch",                ipa:"/hæv lʌntʃ/",            pos:"v.", vi:"Ăn trưa",                      exEn:"I have lunch at the canteen.", exVi:"Tôi ăn trưa ở căn tin.", img:"" },
+  { id:"home",         word:"Come home",                 ipa:"/kʌm hoʊm/",             pos:"v.", vi:"Về nhà",                       exEn:"He comes home at 5 p.m.", exVi:"Anh ấy về nhà lúc 5 giờ chiều.", img:"" },
+  { id:"shower",       word:"Take a shower",             ipa:"/teɪk ə ˈʃaʊ.ɚ/",        pos:"v.", vi:"Tắm",                          exEn:"I take a shower after work.", exVi:"Tôi tắm sau giờ làm.", img:"" },
+
+  { id:"laundry",      word:"Do the laundry",            ipa:"/duː ðə ˈlɔːn.dri/",     pos:"v.", vi:"Giặt đồ",                      exEn:"She does the laundry on Sundays.", exVi:"Cô ấy giặt đồ vào Chủ Nhật.", img:"" },
+  { id:"hang-clothes", word:"Hang the clothes",          ipa:"/hæŋ ðə kloʊðz/",        pos:"v.", vi:"Treo quần áo",                 exEn:"Hang the clothes outside to dry.", exVi:"Phơi quần áo bên ngoài cho khô.", img:"" },
+  { id:"fold-clothes", word:"Fold the clothes",          ipa:"/foʊld ðə kloʊðz/",      pos:"v.", vi:"Gấp quần áo",                  exEn:"He folds the clothes neatly.", exVi:"Anh ấy gấp quần áo gọn gàng.", img:"" },
+  { id:"iron",         word:"Iron the clothes",          ipa:"/ˈaɪ.ɚn ðə kloʊðz/",     pos:"v.", vi:"Ủi quần áo",                   exEn:"I iron the clothes on Saturday.", exVi:"Tôi ủi quần áo vào thứ Bảy.", img:"" },
+
+  { id:"bed",          word:"Go to bed",                 ipa:"/ɡoʊ tə bed/",           pos:"v.", vi:"Đi ngủ",                       exEn:"I go to bed at 10 p.m.", exVi:"Tôi đi ngủ lúc 10 giờ tối.", img:"" },
+  { id:"makeup",       word:"Put makeup on",             ipa:"/pʊt ˈmeɪk.ʌp ɒn/",      pos:"v.", vi:"Trang điểm",                   exEn:"She puts makeup on before work.", exVi:"Cô ấy trang điểm trước khi đi làm.", img:"" },
+  { id:"gym",          word:"Go to the gym",             ipa:"/ɡoʊ tə ðə dʒɪm/",       pos:"v.", vi:"Đi tập gym",                   exEn:"We go to the gym three times a week.", exVi:"Chúng tôi đi gym ba lần mỗi tuần.", img:"" },
+  { id:"feed-pet",     word:"Feed the dog/cat/fish",     ipa:"/fiːd ðə dɒɡ/kæt/fɪʃ/",  pos:"v.", vi:"Cho chó/mèo/cá ăn",            exEn:"Don’t forget to feed the cat.", exVi:"Đừng quên cho mèo ăn.", img:"" },
+  { id:"rubbish",      word:"Take out the rubbish",      ipa:"/teɪk aʊt ðə ˈrʌ.bɪʃ/",  pos:"v.", vi:"Đổ rác",                        exEn:"He takes out the rubbish at night.", exVi:"Anh ấy đổ rác vào buổi tối.", img:"" },
+  { id:"dinner",       word:"Make dinner",               ipa:"/meɪk ˈdɪn.ɚ/",          pos:"v.", vi:"Nấu bữa tối",                   exEn:"Mom makes dinner at six.", exVi:"Mẹ nấu bữa tối lúc 6 giờ.", img:"" },
+  { id:"walk-out",     word:"Go for a walk",             ipa:"/ɡoʊ fər ə wɔːk/",       pos:"v.", vi:"Đi dạo",                        exEn:"Let’s go for a walk after dinner.", exVi:"Ăn tối xong đi dạo nhé.", img:"" },
+  { id:"dishes",       word:"Wash the dishes",           ipa:"/wɒʃ ðə ˈdɪʃ.ɪz/",       pos:"v.", vi:"Rửa bát đĩa",                  exEn:"He washes the dishes every night.", exVi:"Anh ấy rửa bát đĩa mỗi tối.", img:"" },
+];
