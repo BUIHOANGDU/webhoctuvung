@@ -1,0 +1,23 @@
+window.DATA_HOBBIES = [
+  { id:"read-books",   word:"Read books",                ipa:"/riːd bʊks/",                  pos:"v.", vi:"Đọc sách",                         exEn:"I read books before bed.", exVi:"Tôi đọc sách trước khi ngủ.", img:"" },
+  { id:"listen-music", word:"Listen to music",           ipa:"/ˈlɪs.ən tə ˈmjuː.zɪk/",       pos:"v.", vi:"Nghe nhạc",                        exEn:"She listens to music on the bus.", exVi:"Cô ấy nghe nhạc trên xe buýt.", img:"" },
+  { id:"cook",         word:"Cook",                      ipa:"/kʊk/",                        pos:"v.", vi:"Nấu ăn",                           exEn:"My dad cooks dinner every day.", exVi:"Bố tôi nấu bữa tối mỗi ngày.", img:"" },
+  { id:"watch-tv",     word:"Watch TV",                  ipa:"/wɒtʃ ˌtiːˈviː/",              pos:"v.", vi:"Xem TV",                           exEn:"We watch TV after work.", exVi:"Chúng tôi xem TV sau giờ làm.", img:"" },
+  { id:"shopping",     word:"Go shopping",               ipa:"/ɡoʊ ˈʃɒp.ɪŋ/",               pos:"v.", vi:"Đi mua sắm",                       exEn:"I go shopping at the weekend.", exVi:"Tôi đi mua sắm cuối tuần.", img:"" },
+  { id:"photos",       word:"Take photos",               ipa:"/teɪk ˈfoʊ.toʊz/",             pos:"v.", vi:"Chụp ảnh",                         exEn:"He takes photos of nature.", exVi:"Anh ấy chụp ảnh thiên nhiên.", img:"" },
+  { id:"football",     word:"Play football",             ipa:"/pleɪ ˈfʊt.bɔːl/",             pos:"v.", vi:"Chơi đá banh",                     exEn:"They play football at the park.", exVi:"Họ đá banh ở công viên.", img:"" },
+  { id:"volleyball",   word:"Play volleyball",           ipa:"/pleɪ ˈvɒl.i.bɔːl/",           pos:"v.", vi:"Chơi bóng chuyền",                 exEn:"We play volleyball on the beach.", exVi:"Chúng tôi chơi bóng chuyền trên bãi biển.", img:"" },
+  { id:"badminton",    word:"Play badminton",            ipa:"/pleɪ ˈbæd.mɪn.tən/",          pos:"v.", vi:"Chơi cầu lông",                    exEn:"She plays badminton after school.", exVi:"Cô ấy chơi cầu lông sau giờ học.", img:"" },
+  { id:"basketball",   word:"Play basketball",           ipa:"/pleɪ ˈbæs.kɪt.bɔːl/",         pos:"v.", vi:"Chơi bóng rổ",                     exEn:"Do you play basketball?", exVi:"Bạn có chơi bóng rổ không?", img:"" },
+  { id:"surf-net",     word:"Surf the net",              ipa:"/sɜːf ðə net/",                pos:"v.", vi:"Lướt web",                         exEn:"I surf the net for news.", exVi:"Tôi lướt web để đọc tin.", img:"" },
+  { id:"hangout",      word:"Hang out",                  ipa:"/hæŋ aʊt/",                     pos:"v.", vi:"Giao lưu bạn bè",                  exEn:"We hang out at a café.", exVi:"Chúng tôi tụ tập ở quán cà phê.", img:"" },
+  { id:"cards",        word:"Play cards",                ipa:"/pleɪ kɑːrdz/",                pos:"v.", vi:"Chơi thẻ bài",                     exEn:"My grandpa loves playing cards.", exVi:"Ông tôi thích chơi thẻ bài.", img:"" },
+  { id:"instruments",  word:"Play musical instruments",  ipa:"/pleɪ ˈmjuː.zɪ.kəl ˈɪn.strə.mənts/", pos:"v.", vi:"Chơi nhạc cụ",           exEn:"She plays two musical instruments.", exVi:"Cô ấy chơi hai loại nhạc cụ.", img:"" },
+
+  { id:"relaxed",      word:"Make me relaxed",           ipa:"/meɪk miː rɪˈlækst/",           pos:"v.", vi:"(Khiến tôi) thư giãn",            exEn:"Reading makes me relaxed.", exVi:"Đọc sách làm tôi thư giãn.", img:"" },
+  { id:"strong",       word:"Make me strong",            ipa:"/meɪk miː strɒŋ/",              pos:"v.", vi:"(Làm tôi) khỏe mạnh",             exEn:"Swimming makes me strong.", exVi:"Bơi lội làm tôi khoẻ mạnh.", img:"" },
+  { id:"fit-healthy",  word:"Help me keep fit and stay healthy", ipa:"/help miː kiːp fɪt ænd steɪ ˈhelθi/", pos:"v.", vi:"Giúp tôi giữ dáng & duy trì sức khỏe", exEn:"Jogging helps me keep fit and stay healthy.", exVi:"Chạy bộ giúp tôi giữ dáng và khỏe mạnh.", img:"" },
+  { id:"broaden-mind", word:"Broaden my mind",           ipa:"/ˈbrɔː.dən maɪ maɪnd/",         pos:"v.", vi:"Mở mang đầu óc",                  exEn:"Traveling broadens my mind.", exVi:"Du lịch mở mang đầu óc tôi.", img:"" },
+  { id:"kill-time",    word:"Kill the time",             ipa:"/kɪl ðə taɪm/",                 pos:"v.", vi:"Giết thời gian",                  exEn:"I play games to kill the time.", exVi:"Tôi chơi game để giết thời gian.", img:"" },
+  { id:"relieve-stress",word:"Relieve stress",           ipa:"/rɪˈliːv stres/",               pos:"v.", vi:"Giải tỏa căng thẳng",             exEn:"Yoga helps me relieve stress.", exVi:"Yoga giúp tôi giải tỏa căng thẳng.", img:"" },
+];
