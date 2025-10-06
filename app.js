@@ -271,26 +271,152 @@ function switchTopic(id) {
   showScreen("study");
 }
 
-/************** TTS **************/
-const VOICE_KEY = "vocab_tts_voice_name", RATE_KEY = "vocab_tts_rate";
-let VOICES = [], EN_VOICE = null, TTS_RATE = parseFloat(localStorage.getItem(RATE_KEY) || "0.95");
+/************** TTS (giọng chuẩn & ổn định) **************/
+const VOICE_KEY = "vocab_tts_voice_name";
+const RATE_KEY  = "vocab_tts_rate";
+
+// Giữ rate người dùng, giới hạn an toàn 0.6 – 1.2 cho tự nhiên
+let TTS_RATE = Math.min(1.2, Math.max(0.6, parseFloat(localStorage.getItem(RATE_KEY) || "0.95")));
+
+let VOICES = [];
+let CURRENT_VOICE = null;
+
+// 8 preset mong muốn: group để hiển thị, label để gắn Nam/Nữ đẹp mắt
+const VOICE_PRESETS = [
+  { key:"en-us-m", group:"English (US)", label:"Male",   lang:"en-US", hints:["Google US English Male","Google US English","Male"] },
+  { key:"en-us-f", group:"English (US)", label:"Female", lang:"en-US", hints:["Google US English Female","Google US English","Female"] },
+  { key:"en-gb-m", group:"English (UK)", label:"Male",   lang:"en-GB", hints:["Google UK English Male","Google UK English","Male"] },
+  { key:"en-gb-f", group:"English (UK)", label:"Female", lang:"en-GB", hints:["Google UK English Female","Google UK English","Female"] },
+  { key:"ja-jp-m", group:"Japanese",     label:"Male",   lang:"ja-JP", hints:["日本語","Ichiro","Male","Google 日本語"] },
+  { key:"ja-jp-f", group:"Japanese",     label:"Female", lang:"ja-JP", hints:["Ayumi","Female","日本語","Google 日本語"] },
+  { key:"ko-kr-m", group:"Korean",       label:"Male",   lang:"ko-KR", hints:["한국의","Male","Google 한국의"] },
+  { key:"ko-kr-f", group:"Korean",       label:"Female", lang:"ko-KR", hints:["SunHi","Female","한국의","Google 한국의"] },
+];
+
+// Tìm voice theo lang + tên gợi ý; có fallback hợp lý
+function resolvePreset(preset) {
+  const byLang = VOICES.filter(v => {
+    const L = (v.lang || "").toLowerCase();
+    const need = preset.lang.toLowerCase();
+    return L === need || L.startsWith(need.slice(0, 2)); // ví dụ ja / ja-JP
+  });
+  if (!byLang.length) return null;
+
+  // ưu tiên match theo name hint
+  const nameHit = byLang.find(v =>
+    preset.hints?.some(h => (v.name || "").toLowerCase().includes(h.toLowerCase()))
+  );
+  return nameHit || byLang[0];
+}
+
 function refreshVoices() {
   VOICES = window.speechSynthesis?.getVoices?.() || [];
-  const saved = localStorage.getItem(VOICE_KEY);
-  EN_VOICE = saved ? VOICES.find((v) => v.name === saved) : VOICES.find((v) => /^en(-|_)US/i.test(v.lang));
+  // Nếu trình duyệt load tiếng nói trễ, gọi lại sau một nhịp
+  if (!VOICES.length) { setTimeout(refreshVoices, 200); return; }
+
+  // ---- Render danh sách đẹp & giới hạn đúng 8 giọng ----
+  const sel = document.querySelector("#voiceSelect");
+  if (sel) {
+    sel.innerHTML = "";
+    const groups = [...new Set(VOICE_PRESETS.map(p => p.group))];
+
+    groups.forEach(gr => {
+      const og = document.createElement("optgroup");
+      og.label = gr;
+
+      VOICE_PRESETS.filter(p => p.group === gr).forEach(p => {
+        const v = resolvePreset(p);
+        if (!v) return; // thiết bị không có -> ẩn mục đó
+        const opt = document.createElement("option");
+        opt.value = v.name;
+        opt.textContent = `${p.group} – ${p.label}`;
+        og.appendChild(opt);
+      });
+
+      // chỉ append nếu có ít nhất 1 option
+      if (og.children.length) sel.appendChild(og);
+    });
+
+    // Chọn voice đã lưu, hoặc fallback theo thứ tự ưu tiên
+    const saved = localStorage.getItem(VOICE_KEY);
+    const savedVoice = VOICES.find(v => v.name === saved);
+    if (savedVoice) {
+      sel.value = savedVoice.name;
+      CURRENT_VOICE = savedVoice;
+    } else {
+      // Ưu tiên EN-US Female → EN-US Male → EN-GB Female → EN-GB Male → bất kỳ en-US
+      const wantOrder = ["en-us-f","en-us-m","en-gb-f","en-gb-m"];
+      let picked = null;
+      for (const key of wantOrder) {
+        const preset = VOICE_PRESETS.find(p => p.key === key);
+        picked = resolvePreset(preset || {});
+        if (picked) break;
+      }
+      picked = picked || VOICES.find(v => /^en-us/i.test(v.lang)) || VOICES[0];
+
+      if (picked) {
+        sel.value = picked.name;
+        CURRENT_VOICE = picked;
+        localStorage.setItem(VOICE_KEY, picked.name);
+      }
+    }
+  }
 }
-refreshVoices();
-if (typeof speechSynthesis !== "undefined") speechSynthesis.onvoiceschanged = refreshVoices;
+
+if (typeof speechSynthesis !== "undefined") {
+  // gọi ngay + chờ sự kiện hệ thống nạp giọng
+  refreshVoices();
+  speechSynthesis.onvoiceschanged = refreshVoices;
+}
+
+// UI: đổi voice
+document.querySelector("#voiceSelect")?.addEventListener("change", (e) => {
+  const name = e.target.value;
+  const v = VOICES.find(v => v.name === name);
+  if (v) {
+    CURRENT_VOICE = v;
+    localStorage.setItem(VOICE_KEY, v.name);
+  }
+});
+
+// UI: đổi tốc độ
+const rateRange = document.querySelector("#rateRange");
+const rateValue = document.querySelector("#rateValue");
+if (rateRange) {
+  rateRange.value = String(TTS_RATE);
+  if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
+  rateRange.addEventListener("input", () => {
+    TTS_RATE = Math.min(1.2, Math.max(0.6, parseFloat(rateRange.value || "1")));
+    localStorage.setItem(RATE_KEY, String(TTS_RATE));
+    if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
+  });
+}
+
+// Hàm đọc – đơn giản & chắc chắn
 function speak(text) {
   try {
+    if (!text) return;
     const u = new SpeechSynthesisUtterance(text);
-    if (EN_VOICE) { u.voice = EN_VOICE; u.lang = EN_VOICE.lang || "en-US"; } else u.lang = "en-US";
-    u.rate = TTS_RATE; u.pitch = 1;
+
+    // Hủy cái đang đọc (nếu có) để tránh “nối đuôi” nghe lạ
     if (speechSynthesis?.speaking) speechSynthesis.cancel();
+
+    if (CURRENT_VOICE) {
+      u.voice = CURRENT_VOICE;
+      u.lang  = CURRENT_VOICE.lang || "en-US";
+    } else {
+      u.lang = "en-US";
+    }
+    u.rate  = TTS_RATE;
+    u.pitch = 1;
+
     speechSynthesis.speak(u);
-  } catch (e) { console.warn("TTS error:", e); }
+  } catch (e) {
+    console.warn("TTS error:", e);
+  }
 }
 window.speak = speak;
+
 
 /************** Progress (per-user) **************/
 const STREAK_KEY = "vocab_streak_day_v1";
@@ -789,6 +915,7 @@ document.querySelector("#createTopic")?.addEventListener("click", () => {
   const ti = document.querySelector("#newTopicIcon"); if (ti) ti.value = "";
   renderTopicButtons(); renderMyTopicsInModal(); alert("Đã tạo chủ đề!");
 });
+
 
 
 
