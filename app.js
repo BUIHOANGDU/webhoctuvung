@@ -18,12 +18,12 @@ const BUILTIN_TOPICS = [
   { id: "dates",    label: "Numbers & Dates", icon: "📅" },
   { id: "hobbies",  label: "Hobbies",         icon: "🎯" },
   { id: "routines", label: "Daily Routines",  icon: "⏰" },
-  { id: "food", label: "Food & Drink", icon: "🍔" },
-  { id: "family", label: "Family", icon: "👨‍👩‍👧" },
-  { id: "travel", label: "Travel", icon: "✈️" },
-  { id: "school", label: "School", icon: "🏫" },
-  { id: "work", label: "Work", icon: "💼" },
-  { id: "daily", label: "Daily Life", icon: "🌞" },
+  { id: "food",     label: "Food & Drink",    icon: "🍔" },
+  { id: "family",   label: "Family",          icon: "👨‍👩‍👧" },
+  { id: "travel",   label: "Travel",          icon: "✈️" },
+  { id: "school",   label: "School",          icon: "🏫" },
+  { id: "work",     label: "Work",            icon: "💼" },
+  { id: "daily",    label: "Daily Life",      icon: "🌞" },
 ];
 
 // === mỗi user có không gian dữ liệu riêng (hoặc __guest) ===
@@ -44,7 +44,7 @@ const $ = (s) => document.querySelector(s);
 const isBuiltin = (id) => BUILTIN_TOPICS.some((t) => t.id === id);
 
 /************** CLOUD TOPICS (admin) **************/
-let CLOUD_TOPICS = [];               // [{id,label,icon}]
+let CLOUD_TOPICS = [];                 // [{id,label,icon}]
 let CLOUD_WORDS  = Object.create(null); // { [topicId]: [{id,word,vi,ipa,pos,...}] }
 let _cloudTopicsUnsub = null;
 const isCloudTopic = (id) => CLOUD_TOPICS.some(t => t.id === id);
@@ -271,7 +271,7 @@ function switchTopic(id) {
   showScreen("study");
 }
 
-/************** TTS (giọng chuẩn & ổn định) **************/
+/************** TTS (preset 4 EN + 2 JA + 2 KO, ổn định) **************/
 const VOICE_KEY = "vocab_tts_voice_name";
 const RATE_KEY  = "vocab_tts_rate";
 
@@ -281,70 +281,59 @@ let TTS_RATE = Math.min(1.2, Math.max(0.6, parseFloat(localStorage.getItem(RATE_
 let VOICES = [];
 let CURRENT_VOICE = null;
 
-// 8 preset mong muốn: group để hiển thị, label để gắn Nam/Nữ đẹp mắt
+// 8 preset mong muốn (ẩn mục nếu thiết bị thiếu giọng)
 const VOICE_PRESETS = [
   { key:"en-us-m", group:"English (US)", label:"Male",   lang:"en-US", hints:["Google US English Male","Google US English","Male"] },
   { key:"en-us-f", group:"English (US)", label:"Female", lang:"en-US", hints:["Google US English Female","Google US English","Female"] },
   { key:"en-gb-m", group:"English (UK)", label:"Male",   lang:"en-GB", hints:["Google UK English Male","Google UK English","Male"] },
   { key:"en-gb-f", group:"English (UK)", label:"Female", lang:"en-GB", hints:["Google UK English Female","Google UK English","Female"] },
-  { key:"ja-jp-m", group:"Japanese",     label:"Male",   lang:"ja-JP", hints:["日本語","Ichiro","Male","Google 日本語"] },
-  { key:"ja-jp-f", group:"Japanese",     label:"Female", lang:"ja-JP", hints:["Ayumi","Female","日本語","Google 日本語"] },
-  { key:"ko-kr-m", group:"Korean",       label:"Male",   lang:"ko-KR", hints:["한국의","Male","Google 한국의"] },
-  { key:"ko-kr-f", group:"Korean",       label:"Female", lang:"ko-KR", hints:["SunHi","Female","한국의","Google 한국의"] },
+  { key:"ja-jp-m", group:"Japanese",     label:"Male",   lang:"ja-JP",  hints:["日本語","Ichiro","Male","Google 日本語"] },
+  { key:"ja-jp-f", group:"Japanese",     label:"Female", lang:"ja-JP",  hints:["Ayumi","Female","日本語","Google 日本語"] },
+  { key:"ko-kr-m", group:"Korean",       label:"Male",   lang:"ko-KR",  hints:["한국의","Male","Google 한국의"] },
+  { key:"ko-kr-f", group:"Korean",       label:"Female", lang:"ko-KR",  hints:["SunHi","Female","한국의","Google 한국의"] },
 ];
 
-// Tìm voice theo lang + tên gợi ý; có fallback hợp lý
 function resolvePreset(preset) {
   const byLang = VOICES.filter(v => {
     const L = (v.lang || "").toLowerCase();
     const need = preset.lang.toLowerCase();
-    return L === need || L.startsWith(need.slice(0, 2)); // ví dụ ja / ja-JP
+    return L === need || L.startsWith(need.slice(0,2));
   });
   if (!byLang.length) return null;
-
-  // ưu tiên match theo name hint
   const nameHit = byLang.find(v =>
-    preset.hints?.some(h => (v.name || "").toLowerCase().includes(h.toLowerCase()))
+    (preset.hints||[]).some(h => (v.name||"").toLowerCase().includes(h.toLowerCase()))
   );
   return nameHit || byLang[0];
 }
 
 function refreshVoices() {
   VOICES = window.speechSynthesis?.getVoices?.() || [];
-  // Nếu trình duyệt load tiếng nói trễ, gọi lại sau một nhịp
   if (!VOICES.length) { setTimeout(refreshVoices, 200); return; }
 
-  // ---- Render danh sách đẹp & giới hạn đúng 8 giọng ----
   const sel = document.querySelector("#voiceSelect");
   if (sel) {
     sel.innerHTML = "";
     const groups = [...new Set(VOICE_PRESETS.map(p => p.group))];
-
     groups.forEach(gr => {
       const og = document.createElement("optgroup");
       og.label = gr;
-
       VOICE_PRESETS.filter(p => p.group === gr).forEach(p => {
         const v = resolvePreset(p);
-        if (!v) return; // thiết bị không có -> ẩn mục đó
+        if (!v) return;
         const opt = document.createElement("option");
         opt.value = v.name;
         opt.textContent = `${p.group} – ${p.label}`;
         og.appendChild(opt);
       });
-
-      // chỉ append nếu có ít nhất 1 option
       if (og.children.length) sel.appendChild(og);
     });
 
-    // Chọn voice đã lưu, hoặc fallback theo thứ tự ưu tiên
     const saved = localStorage.getItem(VOICE_KEY);
     const savedVoice = VOICES.find(v => v.name === saved);
     if (savedVoice) {
       sel.value = savedVoice.name;
       CURRENT_VOICE = savedVoice;
     } else {
-      // Ưu tiên EN-US Female → EN-US Male → EN-GB Female → EN-GB Male → bất kỳ en-US
       const wantOrder = ["en-us-f","en-us-m","en-gb-f","en-gb-m"];
       let picked = null;
       for (const key of wantOrder) {
@@ -353,7 +342,6 @@ function refreshVoices() {
         if (picked) break;
       }
       picked = picked || VOICES.find(v => /^en-us/i.test(v.lang)) || VOICES[0];
-
       if (picked) {
         sel.value = picked.name;
         CURRENT_VOICE = picked;
@@ -364,15 +352,13 @@ function refreshVoices() {
 }
 
 if (typeof speechSynthesis !== "undefined") {
-  // gọi ngay + chờ sự kiện hệ thống nạp giọng
   refreshVoices();
   speechSynthesis.onvoiceschanged = refreshVoices;
 }
 
-// UI: đổi voice
+// UI: đổi voice trong select
 document.querySelector("#voiceSelect")?.addEventListener("change", (e) => {
-  const name = e.target.value;
-  const v = VOICES.find(v => v.name === name);
+  const v = VOICES.find(v => v.name === e.target.value);
   if (v) {
     CURRENT_VOICE = v;
     localStorage.setItem(VOICE_KEY, v.name);
@@ -392,31 +378,25 @@ if (rateRange) {
   });
 }
 
-// Hàm đọc – đơn giản & chắc chắn
+// Hàm đọc – chắc chắn, không bị “nối đuôi”
 function speak(text) {
   try {
     if (!text) return;
     const u = new SpeechSynthesisUtterance(text);
-
-    // Hủy cái đang đọc (nếu có) để tránh “nối đuôi” nghe lạ
     if (speechSynthesis?.speaking) speechSynthesis.cancel();
-
-    if (CURRENT_VOICE) {
-      u.voice = CURRENT_VOICE;
-      u.lang  = CURRENT_VOICE.lang || "en-US";
-    } else {
-      u.lang = "en-US";
-    }
-    u.rate  = TTS_RATE;
-    u.pitch = 1;
-
+    if (CURRENT_VOICE) { u.voice = CURRENT_VOICE; u.lang = CURRENT_VOICE.lang || "en-US"; }
+    else { u.lang = "en-US"; }
+    u.rate = TTS_RATE; u.pitch = 1;
     speechSynthesis.speak(u);
-  } catch (e) {
-    console.warn("TTS error:", e);
-  }
+  } catch(e) { console.warn("TTS error:", e); }
 }
 window.speak = speak;
 
+// Handlers mở/đóng modal cài đặt (không đụng TTS vars)
+const settingsModal = $("#settingsModal");
+$("#btn-settings")?.addEventListener("click", () => settingsModal?.classList.remove("hidden"));
+$("#closeSettings")?.addEventListener("click", () => settingsModal?.classList.add("hidden"));
+settingsModal?.addEventListener("click", (e) => { if (e.target === settingsModal) settingsModal.classList.add("hidden"); });
 
 /************** Progress (per-user) **************/
 const STREAK_KEY = "vocab_streak_day_v1";
@@ -657,265 +637,3 @@ gradeCurrent = function (grade) {
     }
   }
 };
-
-/************** Settings modal **************/
-const settingsModal = $("#settingsModal");
-const closeSettings = $("#closeSettings");
-const btnSettings = $("#btn-settings");
-const voiceSelect = $("#voiceSelect");
-const rateRange = $("#rateRange");
-const rateValue = $("#rateValue");
-
-btnSettings?.addEventListener("click", () => settingsModal?.classList.remove("hidden"));
-closeSettings?.addEventListener("click", () => settingsModal?.classList.add("hidden"));
-settingsModal?.addEventListener("click", (e) => { if (e.target === settingsModal) settingsModal.classList.add("hidden"); });
-
-function refreshVoiceListUI() {
-  if (!voiceSelect) return;
-  VOICES = speechSynthesis.getVoices() || [];
-  voiceSelect.innerHTML = "";
-
-  // Nhóm ngôn ngữ cần thiết
-  const langs = {
-    "English (US/UK)": v => /^en-(us|gb)/i.test(v.lang),
-    "Japanese": v => /^ja/i.test(v.lang),
-    "Korean": v => /^ko/i.test(v.lang),
-  };
-
-  Object.entries(langs).forEach(([label, filterFn]) => {
-    const list = VOICES.filter(filterFn);
-    if (!list.length) return;
-
-    const og = document.createElement("optgroup");
-    og.label = label;
-
-    // lấy 2 giọng khác nhau (nếu có) → gán nhãn Nam/Nữ
-    const first = list[0];
-    const second = list[1] || list[0]; // nếu không có đủ thì lặp lại
-
-    [
-      { v: first, suffix: "Male" },
-      { v: second, suffix: "Female" },
-    ].forEach(({ v, suffix }) => {
-      if (!v) return;
-      const opt = document.createElement("option");
-      opt.value = v.name;
-      opt.textContent = `${v.name} (${v.lang}) [${suffix}]`;
-      og.appendChild(opt);
-    });
-
-    voiceSelect.appendChild(og);
-  });
-
-  // chọn lại voice đã lưu hoặc fallback
-  const saved = localStorage.getItem(VOICE_KEY);
-  if (saved && VOICES.some(v => v.name === saved)) {
-    voiceSelect.value = saved;
-    EN_VOICE = VOICES.find(v => v.name === saved);
-  } else {
-    const fallback = VOICES.find(v => /^en-us/i.test(v.lang));
-    if (fallback) {
-      voiceSelect.value = fallback.name;
-      EN_VOICE = fallback;
-    }
-  }
-}
-
-refreshVoiceListUI();
-if (typeof speechSynthesis !== "undefined") speechSynthesis.onvoiceschanged = refreshVoiceListUI;
-
-voiceSelect?.addEventListener("change", () => {
-  localStorage.setItem(VOICE_KEY, voiceSelect.value);
-  EN_VOICE = VOICES.find((v) => v.name === voiceSelect.value) || EN_VOICE;
-});
-if (rateRange) {
-  rateRange.value = String(TTS_RATE);
-  if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
-  rateRange.addEventListener("input", () => {
-    TTS_RATE = parseFloat(rateRange.value);
-    localStorage.setItem(RATE_KEY, String(TTS_RATE));
-    if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
-  });
-}
-
-/************** Add / Edit Word (modal) – LOCAL ONLY **************/
-const addWordModal = $("#addWordModal");
-const closeAddWord = $("#closeAddWord");
-const saveAddWord = $("#saveAddWord");
-const addWordTopicSel = $("#addWordTopic");
-const addWordImage = $("#addWordImage");
-const addWordPreview = $("#addWordPreview");
-const clearImageBtn = $("#clearImage");
-const deleteWordInModal = $("#deleteWordInModal");
-
-let EDIT_MODE = false; // false: thêm, true: sửa
-
-function populateTopicSelect() {
-  if (!addWordTopicSel) return;
-  addWordTopicSel.innerHTML = "";
-  // Chỉ cho phép thêm/sửa vào built-in (extras) & user topics; KHÔNG cloud
-  [...BUILTIN_TOPICS, ...getLocalTopics()].forEach((t) => {
-    const opt = document.createElement("option");
-    opt.value = t.id;
-    opt.textContent = `${t.icon || ""} ${t.label}`;
-    addWordTopicSel.appendChild(opt);
-  });
-  addWordTopicSel.disabled = false;
-  addWordTopicSel.value = isCloudTopic(CURRENT_TOPIC) ? "food" : CURRENT_TOPIC;
-}
-function fillForm(data = {}) {
-  const set = (sel,val)=>{ const el=$(sel); if(el) el.value=val||""; };
-  set("#addWordEn", data.word);
-  set("#addWordIpa", data.ipa);
-  set("#addWordPos", data.pos);
-  set("#addWordVi", data.vi);
-  set("#addWordExEn", data.exEn);
-  set("#addWordExVi", data.exVi);
-  if (addWordImage) addWordImage.value = data.img || "";
-  previewImage(data.img || "");
-}
-function previewImage(url) {
-  if (!addWordPreview) return;
-  if (url) { addWordPreview.src = url; addWordPreview.style.display = "block"; }
-  else { addWordPreview.removeAttribute("src"); addWordPreview.style.display = "none"; }
-}
-addWordImage?.addEventListener("input", () => previewImage(addWordImage.value.trim()));
-clearImageBtn?.addEventListener("click", () => { if (addWordImage) addWordImage.value = ""; previewImage(""); });
-function toggleDeleteInModal(show) { deleteWordInModal?.classList.toggle("hidden", !show); }
-
-// mở modal thêm
-btnAddWord?.addEventListener("click", () => {
-  if (isCloudTopic(CURRENT_TOPIC)) {
-    alert("Chủ đề CLOUD được quản trị từ trang admin. Bạn không thể thêm ở đây.");
-    return;
-  }
-  EDIT_MODE = false; populateTopicSelect(); fillForm(); toggleDeleteInModal(false);
-  addWordModal?.classList.remove("hidden");
-});
-// mở modal sửa
-btnEdit?.addEventListener("click", () => {
-  const w = queue[idx]; if (!w) return;
-  if (isCloudTopic(CURRENT_TOPIC)) { alert("Không sửa trực tiếp thẻ CLOUD tại đây."); return; }
-  EDIT_MODE = true; populateTopicSelect(); addWordTopicSel.value = CURRENT_TOPIC; addWordTopicSel.disabled = false;
-  const map = loadImgOverrides(CURRENT_TOPIC);
-  fillForm({ word:w.word, ipa:w.ipa||"", pos:w.pos||"", vi:w.vi||"", exEn:w.exEn||"", exVi:w.exVi||"", img:w.img||map[w.id]||"" });
-  toggleDeleteInModal(/^ext-|^u-/.test(w.id));
-  addWordModal?.classList.remove("hidden");
-});
-// đóng modal
-closeAddWord?.addEventListener("click", () => addWordModal?.classList.add("hidden"));
-addWordModal?.addEventListener("click", (e) => { if (e.target === addWordModal) addWordModal.classList.add("hidden"); });
-// xoá trong modal
-deleteWordInModal?.addEventListener("click", () => {
-  const w = queue[idx]; if (!w || !/^ext-|^u-/.test(w.id)) return;
-  if (!confirm(`Xoá thẻ “${w.word}”?`)) return;
-  if (isBuiltin(CURRENT_TOPIC)) saveExtras(CURRENT_TOPIC, loadExtras(CURRENT_TOPIC).filter((x) => x.id !== w.id));
-  else saveUserTopicWords(CURRENT_TOPIC, loadUserTopicWords(CURRENT_TOPIC).filter((x) => x.id !== w.id));
-  if (PROG[w.id]) { delete PROG[w.id]; saveProgress(PROG); }
-  topicData = getDataset(CURRENT_TOPIC); queue = [...topicData];
-  totalCountEl && (totalCountEl.textContent = String(topicData.length));
-  countLearned(); countDue(); idx = 0; showCard(idx);
-  addWordModal?.classList.add("hidden");
-});
-// lưu (thêm mới / sửa) – LOCAL ONLY
-saveAddWord?.addEventListener("click", () => {
-  const targetTopic = addWordTopicSel?.value || CURRENT_TOPIC;
-  const payload = {
-    word: $("#addWordEn")?.value.trim(),
-    ipa: $("#addWordIpa")?.value.trim(),
-    pos: $("#addWordPos")?.value.trim(),
-    vi: $("#addWordVi")?.value.trim(),
-    exEn: $("#addWordExEn")?.value.trim(),
-    exVi: $("#addWordExVi")?.value.trim(),
-    img: addWordImage ? addWordImage.value.trim() : "",
-  };
-  if (!payload.word || !payload.vi) { alert("Cần nhập tối thiểu: Tiếng Anh + Nghĩa."); return; }
-  if (isCloudTopic(targetTopic)) { alert("Không thể thêm thẻ vào chủ đề CLOUD tại đây."); return; }
-
-  // thêm mới
-  if (!EDIT_MODE) {
-    const id = (isBuiltin(targetTopic) ? `ext-${targetTopic}-` : `u-${targetTopic}-`) + Date.now();
-    const w = { id, ...payload };
-    if (isBuiltin(targetTopic)) { const arr = loadExtras(targetTopic); arr.push(w); saveExtras(targetTopic, arr); }
-    else { const arr = loadUserTopicWords(targetTopic); arr.push(w); saveUserTopicWords(targetTopic, arr); }
-    if (CURRENT_TOPIC === targetTopic) {
-      topicData.push(w); queue.push(w);
-      totalCountEl && (totalCountEl.textContent = String(topicData.length));
-      idx = topicData.length - 1; showCard(idx);
-    }
-    addWordModal?.classList.add("hidden"); return;
-  }
-
-  // sửa
-  const cur = queue[idx]; if (!cur) return;
-  if (/^ext-|^u-/.test(cur.id)) {
-    if (isBuiltin(CURRENT_TOPIC)) {
-      const arr = loadExtras(CURRENT_TOPIC); const i = arr.findIndex((x) => x.id === cur.id);
-      if (i > -1) { arr[i] = { ...arr[i], ...payload }; saveExtras(CURRENT_TOPIC, arr); }
-    } else {
-      const arr = loadUserTopicWords(CURRENT_TOPIC); const i = arr.findIndex((x) => x.id === cur.id);
-      if (i > -1) { arr[i] = { ...arr[i], ...payload }; saveUserTopicWords(CURRENT_TOPIC, arr); }
-    }
-  } else {
-    // builtin gốc: chỉ override ảnh (per-user) + chỉnh text hiển thị cục bộ
-    const map = loadImgOverrides(CURRENT_TOPIC);
-    if (payload.img) map[cur.id] = payload.img; else delete map[cur.id];
-    saveImgOverrides(CURRENT_TOPIC, map);
-    cur.ipa = payload.ipa; cur.pos = payload.pos; cur.vi = payload.vi; cur.exEn = payload.exEn; cur.exVi = payload.exVi;
-  }
-  topicData = getDataset(CURRENT_TOPIC); queue = [...topicData];
-  const newIdx = queue.findIndex((x) => x.id === cur.id); idx = newIdx > -1 ? newIdx : 0;
-  showCard(idx); addWordModal?.classList.add("hidden");
-});
-
-/************** Modal quản lý chủ đề (LOCAL) **************/
-function renderMyTopicsInModal() {
-  const box = document.querySelector("#myTopics"); if (!box) return;
-  const mine = getLocalTopics(); box.innerHTML = "";
-  if (!mine.length) { box.innerHTML = "<p>Chưa có chủ đề tự tạo.</p>"; return; }
-  mine.forEach((t) => {
-    const row = document.createElement("div"); row.className = "row";
-    const icon = document.createElement("input"); icon.type="text"; icon.value=t.icon||""; icon.placeholder="📚"; icon.style.width="64px";
-    const name = document.createElement("input"); name.type="text"; name.value=t.label; name.placeholder="Tên chủ đề";
-    const save = document.createElement("button"); save.textContent="Lưu";
-    const del  = document.createElement("button"); del.textContent="Xoá"; del.className="danger";
-    save.onclick = () => { const list=getLocalTopics(); const i=list.findIndex((x)=>x.id===t.id); if(i>-1){ list[i].label=name.value.trim()||list[i].label; list[i].icon=icon.value.trim()||""; saveLocalTopics(list); renderTopicButtons(); alert("Đã lưu."); } };
-    del.onclick  = () => {
-      if (!confirm(`Xoá chủ đề “${t.label}”?`)) return;
-      localStorage.removeItem(USER_TOPIC_PREFIX() + t.id);
-      localStorage.removeItem(EXTRAS_PREFIX() + t.id);
-      localStorage.removeItem(IMG_OVERRIDE_PREFIX() + t.id);
-      Object.keys(localStorage).forEach((k) => { if (k.startsWith(`vocab_progress_${t.id}_v1`)) localStorage.removeItem(k); });
-      saveLocalTopics(getLocalTopics().filter((x) => x.id !== t.id));
-      renderTopicButtons(); renderMyTopicsInModal();
-      if (CURRENT_TOPIC === t.id) switchTopic("food");
-      alert("Đã xoá.");
-    };
-    row.append(icon, name, save, del); box.appendChild(row);
-  });
-}
-document.querySelector("#btn-manage-topics")?.addEventListener("click", () => {
-  document.querySelector("#topicModal")?.classList.remove("hidden"); renderMyTopicsInModal();
-});
-document.querySelector("#closeTopicModal")?.addEventListener("click", () => {
-  document.querySelector("#topicModal")?.classList.add("hidden");
-});
-document.querySelector("#topicModal")?.addEventListener("click", (e) => {
-  if (e.target.id === "topicModal") e.currentTarget.classList.add("hidden");
-});
-document.querySelector("#createTopic")?.addEventListener("click", () => {
-  const name = document.querySelector("#newTopicName")?.value.trim();
-  const icon = document.querySelector("#newTopicIcon")?.value.trim();
-  if (!name) { alert("Nhập tên chủ đề."); return; }
-  const id = "u_" + (name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || Date.now());
-  const list = getLocalTopics();
-  if (list.some((x) => x.id === id)) { alert("Tên này đã tồn tại, hãy đổi tên khác."); return; }
-  list.push({ id, label: name, icon }); saveLocalTopics(list);
-  const tn = document.querySelector("#newTopicName"); if (tn) tn.value = "";
-  const ti = document.querySelector("#newTopicIcon"); if (ti) ti.value = "";
-  renderTopicButtons(); renderMyTopicsInModal(); alert("Đã tạo chủ đề!");
-});
-
-
-
-
