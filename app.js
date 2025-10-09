@@ -271,126 +271,172 @@ function switchTopic(id) {
   showScreen("study");
 }
 
-/************** TTS (preset 4 EN + 2 JA + 2 KO, ổn định) **************/
+/************** TTS (ổn định đa thiết bị, 4 EN + 2 JA + 2 KO) **************/
 const VOICE_KEY = "vocab_tts_voice_name";
 const RATE_KEY  = "vocab_tts_rate";
 
-// Giữ rate người dùng, giới hạn an toàn 0.6 – 1.2 cho tự nhiên
+// tốc độ tự nhiên, khóa 0.6–1.2 để tránh méo tiếng (đặc biệt iOS)
 let TTS_RATE = Math.min(1.2, Math.max(0.6, parseFloat(localStorage.getItem(RATE_KEY) || "0.95")));
 
 let VOICES = [];
-let CURRENT_VOICE = null;
+let CURRENT_VOICE = null;            // object voice đang chọn
+let VOICE_META = Object.create(null); // name -> { lang, group, label }
 
-// 8 preset mong muốn (ẩn mục nếu thiết bị thiếu giọng)
+// 8 preset cố định. Nếu thiết bị thiếu giọng → mục đó tự ẩn khỏi dropdown.
 const VOICE_PRESETS = [
-  { key:"en-us-m", group:"English (US)", label:"Male",   lang:"en-US", hints:["Google US English Male","Google US English","Male"] },
-  { key:"en-us-f", group:"English (US)", label:"Female", lang:"en-US", hints:["Google US English Female","Google US English","Female"] },
-  { key:"en-gb-m", group:"English (UK)", label:"Male",   lang:"en-GB", hints:["Google UK English Male","Google UK English","Male"] },
-  { key:"en-gb-f", group:"English (UK)", label:"Female", lang:"en-GB", hints:["Google UK English Female","Google UK English","Female"] },
-  { key:"ja-jp-m", group:"Japanese",     label:"Male",   lang:"ja-JP",  hints:["日本語","Ichiro","Male","Google 日本語"] },
-  { key:"ja-jp-f", group:"Japanese",     label:"Female", lang:"ja-JP",  hints:["Ayumi","Female","日本語","Google 日本語"] },
-  { key:"ko-kr-m", group:"Korean",       label:"Male",   lang:"ko-KR",  hints:["한국의","Male","Google 한국의"] },
-  { key:"ko-kr-f", group:"Korean",       label:"Female", lang:"ko-KR",  hints:["SunHi","Female","한국의","Google 한국의"] },
+  { key:"en-us-m", group:"English (US)", label:"Male",   lang:"en-US", hints:["US","Male","Google US English","Siri"] },
+  { key:"en-us-f", group:"English (US)", label:"Female", lang:"en-US", hints:["US","Female","Google US English","Siri"] },
+  { key:"en-gb-m", group:"English (UK)", label:"Male",   lang:"en-GB", hints:["UK","Male","Google UK English","Siri"] },
+  { key:"en-gb-f", group:"English (UK)", label:"Female", lang:"en-GB", hints:["UK","Female","Google UK English","Siri"] },
+  { key:"ja-jp-m", group:"Japanese",     label:"Male",   lang:"ja-JP", hints:["Japanese","日本語","男","Ichiro","Hattori","Google 日本語"] },
+  { key:"ja-jp-f", group:"Japanese",     label:"Female", lang:"ja-JP", hints:["Japanese","日本語","女","Ayumi","Kyoko","Google 日本語"] },
+  { key:"ko-kr-m", group:"Korean",       label:"Male",   lang:"ko-KR", hints:["Korean","한국","남","Minsoo","Google 한국의"] },
+  { key:"ko-kr-f", group:"Korean",       label:"Female", lang:"ko-KR", hints:["Korean","한국","여","SunHi","Yuna","Google 한국의"] },
 ];
 
-function resolvePreset(preset) {
-  const byLang = VOICES.filter(v => {
-    const L = (v.lang || "").toLowerCase();
-    const need = preset.lang.toLowerCase();
-    return L === need || L.startsWith(need.slice(0,2));
+// iOS/Chrome load giọng trễ → chờ tới khi có (tối đa 3s)
+function waitForVoices(maxWaitMs = 3000){
+  return new Promise(resolve=>{
+    const st = performance.now();
+    const loop = ()=>{
+      VOICES = speechSynthesis?.getVoices?.() || [];
+      if (VOICES.length || performance.now()-st > maxWaitMs) return resolve(VOICES);
+      setTimeout(loop, 100);
+    };
+    loop();
   });
-  if (!byLang.length) return null;
-  const nameHit = byLang.find(v =>
-    (preset.hints||[]).some(h => (v.name||"").toLowerCase().includes(h.toLowerCase()))
-  );
-  return nameHit || byLang[0];
 }
 
-function refreshVoices() {
-  VOICES = window.speechSynthesis?.getVoices?.() || [];
-  if (!VOICES.length) { setTimeout(refreshVoices, 200); return; }
+// match preset theo lang + gợi ý tên
+function resolvePreset(preset){
+  const list = VOICES.filter(v=>{
+    const L = (v.lang||"").toLowerCase();
+    const need = preset.lang.toLowerCase();
+    return L === need || L.startsWith(need.slice(0,2)); // ví dụ ja / ja-JP
+  });
+  if(!list.length) return null;
+  const byHint = list.find(v => (preset.hints||[]).some(h => (v.name||"").toLowerCase().includes(h.toLowerCase())));
+  return byHint || list[0];
+}
 
+// render dropdown – tối đa 8 mục, ẩn cái máy không có
+async function refreshVoices(){
+  await waitForVoices();
   const sel = document.querySelector("#voiceSelect");
-  if (sel) {
-    sel.innerHTML = "";
-    const groups = [...new Set(VOICE_PRESETS.map(p => p.group))];
-    groups.forEach(gr => {
-      const og = document.createElement("optgroup");
-      og.label = gr;
-      VOICE_PRESETS.filter(p => p.group === gr).forEach(p => {
-        const v = resolvePreset(p);
-        if (!v) return;
-        const opt = document.createElement("option");
-        opt.value = v.name;
-        opt.textContent = `${p.group} – ${p.label}`;
-        og.appendChild(opt);
-      });
-      if (og.children.length) sel.appendChild(og);
+  if(!sel) return;
+
+  sel.innerHTML = "";
+  VOICE_META = Object.create(null);
+
+  const groups = [...new Set(VOICE_PRESETS.map(p=>p.group))];
+  groups.forEach(gr=>{
+    const og = document.createElement("optgroup");
+    og.label = gr;
+
+    VOICE_PRESETS.filter(p=>p.group===gr).forEach(p=>{
+      const v = resolvePreset(p);
+      if(!v) return;
+      VOICE_META[v.name] = { lang:p.lang, group:p.group, label:p.label };
+      const opt = document.createElement("option");
+      opt.value = v.name;
+      opt.textContent = `${p.group} – ${p.label}`;
+      og.appendChild(opt);
     });
 
-    const saved = localStorage.getItem(VOICE_KEY);
-    const savedVoice = VOICES.find(v => v.name === saved);
-    if (savedVoice) {
-      sel.value = savedVoice.name;
-      CURRENT_VOICE = savedVoice;
-    } else {
-      const wantOrder = ["en-us-f","en-us-m","en-gb-f","en-gb-m"];
-      let picked = null;
-      for (const key of wantOrder) {
-        const preset = VOICE_PRESETS.find(p => p.key === key);
-        picked = resolvePreset(preset || {});
-        if (picked) break;
-      }
-      picked = picked || VOICES.find(v => /^en-us/i.test(v.lang)) || VOICES[0];
-      if (picked) {
-        sel.value = picked.name;
-        CURRENT_VOICE = picked;
-        localStorage.setItem(VOICE_KEY, picked.name);
-      }
+    if (og.children.length) sel.appendChild(og);
+  });
+
+  // chọn lại voice đã lưu hoặc fallback ưu tiên EN-US
+  const saved = localStorage.getItem(VOICE_KEY);
+  const savedVoice = VOICES.find(v=>v.name===saved);
+  if (savedVoice && VOICE_META[savedVoice.name]) {
+    sel.value = savedVoice.name;
+    CURRENT_VOICE = savedVoice;
+  } else {
+    const order = ["en-us-f","en-us-m","en-gb-f","en-gb-m","ja-jp-f","ja-jp-m","ko-kr-f","ko-kr-m"];
+    let picked = null;
+    for(const k of order){ const v = resolvePreset(VOICE_PRESETS.find(p=>p.key===k)); if(v){ picked=v; break; } }
+    picked = picked || VOICES[0];
+    if (picked){
+      sel.value = picked.name;
+      CURRENT_VOICE = picked;
+      localStorage.setItem(VOICE_KEY, picked.name);
     }
   }
 }
 
-if (typeof speechSynthesis !== "undefined") {
+if (typeof speechSynthesis!=="undefined"){
   refreshVoices();
   speechSynthesis.onvoiceschanged = refreshVoices;
 }
 
-// UI: đổi voice trong select
-document.querySelector("#voiceSelect")?.addEventListener("change", (e) => {
-  const v = VOICES.find(v => v.name === e.target.value);
-  if (v) {
-    CURRENT_VOICE = v;
-    localStorage.setItem(VOICE_KEY, v.name);
-  }
+// đổi giọng trong UI
+document.querySelector("#voiceSelect")?.addEventListener("change",(e)=>{
+  const v = VOICES.find(v=>v.name===e.target.value);
+  if (v){ CURRENT_VOICE = v; localStorage.setItem(VOICE_KEY, v.name); }
 });
 
-// UI: đổi tốc độ
+// speed UI (NHỚ: chỉ định duy nhất ở đây – đừng khai báo lại nơi khác)
 const rateRange = document.querySelector("#rateRange");
 const rateValue = document.querySelector("#rateValue");
-if (rateRange) {
+if (rateRange){
   rateRange.value = String(TTS_RATE);
   if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
-  rateRange.addEventListener("input", () => {
-    TTS_RATE = Math.min(1.2, Math.max(0.6, parseFloat(rateRange.value || "1")));
+  rateRange.addEventListener("input", ()=>{
+    TTS_RATE = Math.min(1.2, Math.max(0.6, parseFloat(rateRange.value||"1")));
     localStorage.setItem(RATE_KEY, String(TTS_RATE));
     if (rateValue) rateValue.textContent = `${TTS_RATE.toFixed(2)}×`;
   });
 }
 
-// Hàm đọc – chắc chắn, không bị “nối đuôi”
-function speak(text) {
+// đoán ngôn ngữ theo ký tự – phòng khi người dùng bật sai giọng
+function detectTextLang(text){
+  if (/[ぁ-ゟァ-ヿ一-龯]/.test(text)) return "ja-JP";
+  if (/[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(text)) return "ko-KR";
+  return "en-US";
+}
+
+// warm-up để iOS không “kẹt hàng đợi”
+let TTS_WARMED = false;
+function warmUpTTS(){
+  if (TTS_WARMED) return;
   try {
-    if (!text) return;
-    const u = new SpeechSynthesisUtterance(text);
-    if (speechSynthesis?.speaking) speechSynthesis.cancel();
-    if (CURRENT_VOICE) { u.voice = CURRENT_VOICE; u.lang = CURRENT_VOICE.lang || "en-US"; }
-    else { u.lang = "en-US"; }
-    u.rate = TTS_RATE; u.pitch = 1;
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0; u.rate = 1; u.lang = "en-US";
     speechSynthesis.speak(u);
-  } catch(e) { console.warn("TTS error:", e); }
+  } catch{}
+  TTS_WARMED = true;
+}
+
+// speak: huỷ hàng đợi cũ + ép lang theo preset/meta
+function speak(text){
+  try{
+    if (!text) return;
+    warmUpTTS();
+
+    if (speechSynthesis?.speaking || speechSynthesis?.pending) {
+      speechSynthesis.cancel();
+    }
+
+    const u = new SpeechSynthesisUtterance(text);
+
+    if (CURRENT_VOICE){
+      u.voice = CURRENT_VOICE;
+      const meta = VOICE_META[CURRENT_VOICE.name];
+      u.lang = (meta && meta.lang) || detectTextLang(text) || CURRENT_VOICE.lang || "en-US";
+    } else {
+      u.lang = detectTextLang(text);
+    }
+
+    u.rate = TTS_RATE;  // 0.6–1.2
+    u.pitch = 1;
+    u.volume = 1;
+
+    setTimeout(()=>{ try{ speechSynthesis.resume(); }catch{} speechSynthesis.speak(u); }, 60);
+  }catch(e){ console.warn("TTS error:", e); }
 }
 window.speak = speak;
+
 
 // Handlers mở/đóng modal cài đặt (không đụng TTS vars)
 const settingsModal = $("#settingsModal");
@@ -637,3 +683,4 @@ gradeCurrent = function (grade) {
     }
   }
 };
+
